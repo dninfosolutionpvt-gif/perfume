@@ -19,7 +19,8 @@ import {
   CreditCard, 
   Clock, 
   Truck, 
-  ShieldAlert 
+  ShieldAlert,
+  Edit
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_BASE_URL } from '../../config';
@@ -32,8 +33,15 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Form states for adding new product
+  // Authentication states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [passcode, setPasscode] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  // Form states for adding/editing product
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingProductId, setEditingProductId] = useState(null);
   const [newProduct, setNewProduct] = useState({
     name: '',
     price: '',
@@ -46,7 +54,8 @@ export default function AdminDashboard() {
     image_front: '',
     inspired_by: '',
     sillage: 'Moderate',
-    projection: 'Moderate'
+    projection: 'Moderate',
+    stock: 10
   });
   
   const [formError, setFormError] = useState('');
@@ -78,9 +87,44 @@ export default function AdminDashboard() {
     }
   };
 
+  // Check auth status on mount
   useEffect(() => {
-    fetchData();
+    if (typeof window !== 'undefined') {
+      const auth = localStorage.getItem('orovaAdminAuthenticated');
+      if (auth === 'true') {
+        setIsAuthenticated(true);
+      } else {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch data only if authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  // Auth Handlers
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    setLoginError('');
+    if (passcode === 'admin123' || passcode === '1234') {
+      localStorage.setItem('orovaAdminAuthenticated', 'true');
+      setIsAuthenticated(true);
+    } else {
+      setLoginError('Invalid administrative access key. Please try again.');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('orovaAdminAuthenticated');
+    setIsAuthenticated(false);
+    setPasscode('');
+  };
 
   // Update order status (Shipped, Delivered, Paid, etc.)
   const handleUpdateOrder = async (orderId, updates) => {
@@ -114,8 +158,32 @@ export default function AdminDashboard() {
     }
   };
 
-  // Handle add product submit
-  const handleAddProductSubmit = async (e) => {
+  // Load product info into edit state and open modal
+  const handleEditProductClick = (product) => {
+    setIsEditMode(true);
+    setEditingProductId(product.id);
+    setNewProduct({
+      name: product.name,
+      price: product.price,
+      gender: product.gender,
+      fragrance_type: product.fragrance_type,
+      occasion: product.occasion,
+      longevity: product.longevity,
+      mood: product.mood,
+      description: product.description,
+      image_front: product.image_front,
+      inspired_by: product.inspired_by || '',
+      sillage: product.sillage || 'Moderate',
+      projection: product.projection || 'Moderate',
+      stock: product.stock !== undefined ? product.stock : 10
+    });
+    setFormError('');
+    setFormSuccess('');
+    setShowAddModal(true);
+  };
+
+  // Handle form submit (both add and edit)
+  const handleProductFormSubmit = async (e) => {
     e.preventDefault();
     setFormError('');
     setFormSuccess('');
@@ -126,14 +194,25 @@ export default function AdminDashboard() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/products`, {
-        method: 'POST',
+      const url = isEditMode 
+        ? `${API_BASE_URL}/api/admin/products/${editingProductId}`
+        : `${API_BASE_URL}/api/admin/products`;
+      
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newProduct)
       });
 
       if (res.ok) {
-        setFormSuccess('Luxury perfume successfully introduced to the catalog!');
+        setFormSuccess(isEditMode 
+          ? 'Luxury perfume successfully updated in the catalog!' 
+          : 'Luxury perfume successfully introduced to the catalog!'
+        );
+        
+        // Reset form
         setNewProduct({
           name: '',
           price: '',
@@ -146,12 +225,14 @@ export default function AdminDashboard() {
           image_front: '',
           inspired_by: '',
           sillage: 'Moderate',
-          projection: 'Moderate'
+          projection: 'Moderate',
+          stock: 10
         });
+        
         await fetchData();
         setTimeout(() => setShowAddModal(false), 1500);
       } else {
-        setFormError('Failed to add product. Please check the backend connection.');
+        setFormError('Failed to save product. Please check the backend connection.');
       }
     } catch (err) {
       setFormError('Error connecting to backend server.');
@@ -165,6 +246,72 @@ export default function AdminDashboard() {
         <p className="text-zinc-500 font-sans text-xs uppercase tracking-widest font-bold">
           Authenticating Administrative Console...
         </p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] text-[#1C1917] font-sans flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Glow decorative spheres */}
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gold/5 filter blur-3xl pointer-events-none" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-gold/5 filter blur-3xl pointer-events-none" />
+        
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full max-w-md bg-white border border-gold/20 rounded-2xl shadow-2xl p-8 relative z-10 text-center"
+        >
+          <div className="mb-8">
+            <span className="text-[10px] uppercase tracking-widest text-gold font-bold">Orova Paris</span>
+            <h1 className="font-serif text-3xl font-extrabold tracking-tight mt-1 text-[#1C1917]">
+              Admin Console
+            </h1>
+            <p className="text-zinc-500 text-xs mt-2 font-sans">
+              Enter credentials to establish administrative session
+            </p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} className="space-y-6">
+            {loginError && (
+              <p className="p-3 bg-red-50 border border-red-200 text-red-655 rounded text-xs font-semibold text-left flex items-center">
+                <ShieldAlert className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span>{loginError}</span>
+              </p>
+            )}
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold font-sans">
+                Administrative Passcode
+              </label>
+              <input
+                required
+                type="password"
+                placeholder="Enter access key..."
+                value={passcode}
+                onChange={(e) => setPasscode(e.target.value)}
+                className="w-full bg-[#FAF8F5] border border-zinc-200 focus:border-gold p-3 rounded text-[#1C1917] focus:outline-none text-center font-mono tracking-widest text-sm focus:ring-1 focus:ring-gold/30 transition-all"
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-[#1C1917] hover:bg-[#2e2a27] text-gold border border-gold/30 hover:border-gold rounded font-bold uppercase tracking-wider text-xs transition-all cursor-pointer shadow-md hover:shadow-gold/5"
+            >
+              Authorize Console
+            </button>
+          </form>
+
+          <div className="mt-8 border-t border-zinc-100 pt-4">
+            <Link 
+              href="/"
+              className="text-[10px] uppercase text-zinc-400 hover:text-gold tracking-widest font-bold font-sans transition-colors"
+            >
+              ← Return to Public Storefront
+            </Link>
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -185,7 +332,7 @@ export default function AdminDashboard() {
               Manage luxury scent profiles, catalog listings, and client transactions.
             </p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-wrap gap-2">
             <button 
               onClick={fetchData}
               disabled={refreshing}
@@ -196,10 +343,16 @@ export default function AdminDashboard() {
             </button>
             <Link 
               href="/"
-              className="px-4 py-2 bg-gold hover:bg-gold-dark text-black rounded text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+              className="px-4 py-2 border border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 rounded text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
               Go to Storefront
             </Link>
+            <button 
+              onClick={handleLogout}
+              className="px-4 py-2 bg-gold hover:bg-gold-dark text-black rounded text-xs font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </div>
@@ -425,7 +578,28 @@ export default function AdminDashboard() {
                   <p className="text-zinc-500 text-xs font-sans">Modify, introduce, or discontinue product lines.</p>
                 </div>
                 <button
-                  onClick={() => setShowAddModal(true)}
+                  onClick={() => {
+                    setIsEditMode(false);
+                    setEditingProductId(null);
+                    setNewProduct({
+                      name: '',
+                      price: '',
+                      gender: 'Unisex',
+                      fragrance_type: 'Woody',
+                      occasion: 'Daily Wear',
+                      longevity: '8+ Hours',
+                      mood: 'Elegant',
+                      description: '',
+                      image_front: '',
+                      inspired_by: '',
+                      sillage: 'Moderate',
+                      projection: 'Moderate',
+                      stock: 10
+                    });
+                    setFormError('');
+                    setFormSuccess('');
+                    setShowAddModal(true);
+                  }}
                   className="px-4 py-2.5 bg-gold hover:bg-gold-dark text-black rounded text-xs font-bold uppercase tracking-wider flex items-center space-x-2 transition-all shadow hover:shadow-gold/10 cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -492,7 +666,14 @@ export default function AdminDashboard() {
                         </td>
 
                         {/* Actions */}
-                        <td className="p-4 text-right">
+                        <td className="p-4 text-right flex justify-end space-x-2 items-center">
+                          <button
+                            onClick={() => handleEditProductClick(product)}
+                            className="p-2 text-zinc-400 hover:text-gold transition-colors border border-transparent hover:border-gold/25 hover:bg-gold/5 rounded cursor-pointer"
+                            title="Edit Product"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => handleDeleteProduct(product.id)}
                             className="p-2 text-zinc-400 hover:text-red-600 transition-colors border border-transparent hover:border-red-200 hover:bg-red-50 rounded cursor-pointer"
@@ -556,10 +737,10 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Expanded details container */}
-                    <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6 text-xs text-zinc-650">
+                    <div className="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-xs text-zinc-650">
                       
                       {/* 1. Client profile detail */}
-                      <div className="space-y-3.5 border-b lg:border-b-0 lg:border-r border-zinc-100 pb-4 lg:pb-0 pr-4">
+                      <div className="space-y-3.5 border-b md:border-b-0 md:border-r border-zinc-100 pb-4 md:pb-0 pr-4">
                         <h4 className="font-serif font-bold text-[#1C1917] text-sm uppercase tracking-wider flex items-center space-x-1 text-gold">
                           <User className="w-4 h-4" />
                           <span>Client Profile</span>
@@ -574,8 +755,42 @@ export default function AdminDashboard() {
                         </div>
                       </div>
 
-                      {/* 2. Order actions transition */}
-                      <div className="space-y-4">
+                      {/* 2. Ordered Scents Detail */}
+                      <div className="space-y-3.5 border-b md:border-b-0 lg:border-r border-zinc-100 pb-4 md:pb-0 pr-4 lg:col-span-1">
+                        <h4 className="font-serif font-bold text-[#1C1917] text-sm uppercase tracking-wider flex items-center space-x-1 text-gold">
+                          <Package className="w-4 h-4" />
+                          <span>Scents Purchased</span>
+                        </h4>
+                        <div className="space-y-3 max-h-52 overflow-y-auto pr-1">
+                          {order.items && order.items.length > 0 ? (
+                            order.items.map((item, idx) => (
+                              <div key={idx} className="flex items-center justify-between border-b border-zinc-50 pb-2 gap-2">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-8 h-8 rounded border border-zinc-200 overflow-hidden flex-shrink-0 bg-[#FAF8F5]">
+                                    <img src={item.image_front} alt={item.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-zinc-800 leading-tight text-[11px]">{item.name}</p>
+                                    <p className="text-[9px] text-zinc-455 font-semibold font-mono">
+                                      ₹{item.price.toLocaleString()} × {item.quantity}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-gold font-mono text-[11px]">
+                                    ₹{(item.price * item.quantity).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-[10px] text-zinc-400 italic">No item details recorded for this legacy order.</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 3. Order actions transition */}
+                      <div className="space-y-4 border-b lg:border-b-0 lg:border-r border-zinc-100 pb-4 lg:pb-0 pr-4">
                         <h4 className="font-serif font-bold text-[#1C1917] text-sm uppercase tracking-wider flex items-center space-x-1 text-gold">
                           <CreditCard className="w-4 h-4" />
                           <span>Fulfillment Actions</span>
@@ -651,7 +866,7 @@ export default function AdminDashboard() {
 
       </div>
 
-      {/* POPUP MODAL DIALOG: INTRODUCE PRODUCT */}
+      {/* POPUP MODAL DIALOG: PRODUCT FORM */}
       <AnimatePresence>
         {showAddModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -664,8 +879,12 @@ export default function AdminDashboard() {
               {/* Modal header */}
               <div className="bg-[#1C1917] text-white p-5 border-b border-gold/20 flex justify-between items-center">
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-white uppercase tracking-wider">Introduce Scent Profile</h3>
-                  <p className="text-[10px] text-zinc-400">Introduce a custom niche fragrance to the market catalog.</p>
+                  <h3 className="font-serif text-lg font-bold text-white uppercase tracking-wider">
+                    {isEditMode ? 'Edit Scent Profile' : 'Introduce Scent Profile'}
+                  </h3>
+                  <p className="text-[10px] text-zinc-400">
+                    {isEditMode ? 'Modify key specifications for this luxury perfume listing.' : 'Introduce a custom niche fragrance to the market catalog.'}
+                  </p>
                 </div>
                 <button 
                   onClick={() => setShowAddModal(false)}
@@ -676,7 +895,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Scrollable form content */}
-              <form onSubmit={handleAddProductSubmit} className="p-6 overflow-y-auto space-y-5 text-xs text-zinc-650 max-h-[70vh] scrollbar-thin">
+              <form onSubmit={handleProductFormSubmit} className="p-6 overflow-y-auto space-y-5 text-xs text-zinc-650 max-h-[70vh] scrollbar-thin">
                 
                 {formError && (
                   <p className="p-3 bg-red-50 border border-red-200 text-red-600 rounded flex items-center font-semibold">
@@ -703,16 +922,29 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="font-bold">Price (INR) *</label>
-                    <input
-                      required
-                      type="number"
-                      placeholder="e.g. 2999"
-                      value={newProduct.price}
-                      onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                      className="w-full bg-[#FAF8F5] border border-zinc-200 focus:border-gold p-2.5 rounded text-[#1C1917] focus:outline-none"
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <label className="font-bold">Price (INR) *</label>
+                      <input
+                        required
+                        type="number"
+                        placeholder="e.g. 2999"
+                        value={newProduct.price}
+                        onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+                        className="w-full bg-[#FAF8F5] border border-zinc-200 focus:border-gold p-2.5 rounded text-[#1C1917] focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="font-bold">Stock *</label>
+                      <input
+                        required
+                        type="number"
+                        placeholder="10"
+                        value={newProduct.stock !== undefined ? newProduct.stock : 10}
+                        onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value, 10) })}
+                        className="w-full bg-[#FAF8F5] border border-zinc-200 focus:border-gold p-2.5 rounded text-[#1C1917] focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -840,7 +1072,7 @@ export default function AdminDashboard() {
                     type="submit"
                     className="px-6 py-2 bg-[#1C1917] hover:bg-[#2e2a27] text-gold border border-gold/30 hover:border-gold rounded font-bold uppercase tracking-wider transition-all cursor-pointer shadow-md"
                   >
-                    Catalog Scent profile
+                    {isEditMode ? 'Save Specifications' : 'Catalog Scent Profile'}
                   </button>
                 </div>
 

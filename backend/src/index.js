@@ -249,7 +249,10 @@ const mockOrders = [
     payment_method: 'UPI',
     payment_status: 'Paid',
     status: 'Delivered',
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    items: [
+      { id: 1, name: 'Orova Purple Oud', quantity: 1, price: 3599.00, image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600' }
+    ]
   },
   {
     id: 1002,
@@ -264,7 +267,11 @@ const mockOrders = [
     payment_method: 'COD',
     payment_status: 'Pending',
     status: 'Shipped',
-    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    items: [
+      { id: 4, name: 'Orova Santal Woods', quantity: 1, price: 3299.00, image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600' },
+      { id: 5, name: 'Orova Citrus Ocean', quantity: 1, price: 2499.00, image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600' }
+    ]
   },
   {
     id: 1003,
@@ -279,7 +286,10 @@ const mockOrders = [
     payment_method: 'UPI',
     payment_status: 'Paid',
     status: 'Placed',
-    created_at: new Date()
+    created_at: new Date(),
+    items: [
+      { id: 5, name: 'Orova Citrus Ocean', quantity: 1, price: 2499.00, image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600' }
+    ]
   }
 ];
 
@@ -551,7 +561,14 @@ app.post('/api/orders', async (req, res) => {
       payment_method,
       payment_status: payment_method === 'COD' ? 'Pending' : 'Paid',
       status: 'Placed',
-      created_at: new Date()
+      created_at: new Date(),
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        image_front: item.image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600'
+      }))
     };
     mockOrders.push(newOrder);
 
@@ -572,10 +589,29 @@ app.post('/api/orders', async (req, res) => {
 // Get all orders for admin panel
 app.get('/api/admin/orders', async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM orders ORDER BY created_at DESC');
+    const { rows } = await db.query(`
+      SELECT o.*, 
+             COALESCE(
+                 json_agg(
+                     json_build_object(
+                         'id', p.id,
+                         'name', p.name,
+                         'image_front', p.image_front,
+                         'quantity', oi.quantity,
+                         'price', oi.price
+                     )
+                 ) FILTER (WHERE oi.id IS NOT NULL),
+                 '[]'
+             ) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      LEFT JOIN products p ON oi.product_id = p.id
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `);
     return res.json(rows);
   } catch (error) {
-    console.warn('⚠️ DB orders query failed, falling back to mock orders.');
+    console.warn('⚠️ DB orders query failed, falling back to mock orders. Error:', error.message);
     return res.json(mockOrders);
   }
 });
@@ -680,6 +716,55 @@ app.post('/api/admin/products', async (req, res) => {
     };
     mockProducts.push(newProduct);
     return res.status(201).json(newProduct);
+  }
+});
+
+// Admin Edit existing product
+app.put('/api/admin/products/:id', async (req, res) => {
+  const productId = parseInt(req.params.id, 10);
+  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection, stock } = req.body;
+  if (!name || !price || !gender || !fragrance_type || !occasion || !longevity || !mood || !description) {
+    return res.status(400).json({ error: 'Missing required product fields' });
+  }
+
+  try {
+    const { rows } = await db.query(
+      `UPDATE products 
+       SET name = $1, price = $2, gender = $3, fragrance_type = $4, occasion = $5, longevity = $6, mood = $7, description = $8, image_front = $9, inspired_by = $10, sillage = $11, projection = $12, stock = COALESCE($13, stock)
+       WHERE id = $14 RETURNING *`,
+      [
+        name, parseFloat(price), gender, fragrance_type, occasion, longevity, mood, description,
+        image_front, inspired_by, sillage || 'Moderate', projection || 'Moderate', stock !== undefined ? parseInt(stock, 10) : null, productId
+      ]
+    );
+
+    if (rows.length === 0) return res.status(404).json({ error: 'Product not found' });
+    return res.json(rows[0]);
+  } catch (error) {
+    console.warn('⚠️ DB product update failed, updating in-memory fallback.');
+    const product = mockProducts.find(p => p.id === productId);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+
+    product.name = name;
+    product.price = parseFloat(price);
+    product.gender = gender;
+    product.fragrance_type = fragrance_type;
+    product.occasion = occasion;
+    product.longevity = longevity;
+    product.mood = mood;
+    product.description = description;
+    if (image_front) {
+      product.image_front = image_front;
+      product.image_side = image_front;
+    }
+    product.inspired_by = inspired_by;
+    product.sillage = sillage || product.sillage || 'Moderate';
+    product.projection = projection || product.projection || 'Moderate';
+    if (stock !== undefined) {
+      product.stock = parseInt(stock, 10);
+    }
+
+    return res.json(product);
   }
 });
 

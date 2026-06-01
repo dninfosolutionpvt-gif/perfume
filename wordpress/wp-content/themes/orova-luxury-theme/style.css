@@ -1,0 +1,199 @@
+/*
+Theme Name: Orova Luxury Theme
+Theme URI: https://orova.paris
+Author: Orova Paris Team
+Description: Premium luxury parent theme for Orova Paris perfume storefront, supporting full responsive glassmorphic designs, gold-accented typography styles, and WooCommerce layouts.
+Version: 1.0.0
+Text Domain: orova-theme
+Requires at least: 6.0
+Tested up to: 6.4
+Requires PHP: 7.4
+*/
+
+/* 1. Global Reset & Theme Tokens */
+:root {
+    --color-gold: #C5A059;
+    --color-gold-dark: #A8843F;
+    --color-charcoal: #1C1917;
+    --color-stone: #78716C;
+    --color-alabaster: #FAF8F5;
+    --color-white: #ffffff;
+    --font-serif: 'Cinzel', serif;
+    --font-sans: 'Inter', sans-serif;
+    --border-gold-glass: rgba(197, 160, 89, 0.25);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-alabaster);
+    color: var(--color-charcoal);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.6;
+}
+
+/* 2. Global Typography */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    color: var(--color-charcoal);
+    margin-top: 0;
+    letter-spacing: 0.02em;
+}
+
+p {
+    margin-top: 0;
+    margin-bottom: 1.5em;
+    color: var(--color-stone);
+}
+
+a {
+    color: var(--color-charcoal);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--color-gold);
+}
+
+/* 3. Luxury Floating Navbar Styling */
+.orova-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(250, 248, 245, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-gold-glass);
+    z-index: 1000;
+    padding: 15px 30px;
+    transition: all 0.3s ease;
+}
+
+.orova-nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.orova-logo {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-charcoal);
+}
+
+.orova-logo span {
+    color: var(--color-gold);
+}
+
+.orova-menu {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 30px;
+}
+
+.orova-menu a {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-charcoal);
+}
+
+.orova-menu a:hover {
+    color: var(--color-gold);
+}
+
+.orova-cart-icon {
+    position: relative;
+    cursor: pointer;
+}
+
+/* 4. Luxury Footer Styling */
+.orova-footer {
+    background: var(--color-charcoal);
+    color: var(--color-white);
+    padding: 80px 30px 40px 30px;
+    border-top: 1px solid var(--border-gold-glass);
+}
+
+.orova-footer-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+}
+
+@media (min-width: 768px) {
+    .orova-footer-grid {
+        grid-template-columns: 2fr repeat(3, 1fr);
+    }
+}
+
+.footer-brand h3 {
+    color: var(--color-white);
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.footer-brand p {
+    color: #A8A29E;
+    font-size: 12px;
+    max-width: 280px;
+}
+
+.footer-links h4 {
+    color: var(--color-gold);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 20px;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 10px;
+}
+
+.footer-links a {
+    color: #A8A29E;
+    font-size: 12px;
+}
+
+.footer-links a:hover {
+    color: var(--color-white);
+}
+
+.footer-bottom {
+    max-width: 1200px;
+    margin: 60px auto 0 auto;
+    border-top: 1px solid #2E2A27;
+    padding-top: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #78716C;
+}
+
+/* 5. Custom Page Container */
+.orova-container {
+    max-width: 1200px;
+    margin: 120px auto 60px auto;
+    padding: 0 20px;
+}
