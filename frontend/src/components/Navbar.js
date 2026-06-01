@@ -25,10 +25,10 @@ export default function Navbar() {
   }, []);
 
   const navLinks = [
+    { name: 'Orova Tuberose', path: '/orova-tuberose' },
     { name: 'Collection', path: '/shop' },
     { name: 'Scent Quiz', path: '/quiz' },
     { name: 'Brand Story', path: '/#brand-story' },
-    { name: 'FAQ', path: '/#faq' },
   ];
 
   return (
@@ -42,7 +42,7 @@ export default function Navbar() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden text-zinc-300 hover:text-gold transition-colors duration-300 cursor-pointer"
+          className="md:hidden text-zinc-700 hover:text-gold transition-colors duration-300 cursor-pointer"
         >
           {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -50,7 +50,7 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link href="/" className="flex items-center space-x-2 group">
           <span className="font-serif text-xl sm:text-2xl font-bold tracking-widest text-gold-gradient group-hover:opacity-95 transition-opacity">
-            AURA LUXE
+            OROVA PARIS
           </span>
         </Link>
 
@@ -60,7 +60,7 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.path}
-              className="text-xs uppercase tracking-widest text-zinc-300 hover:text-gold font-sans font-semibold transition-colors duration-300 relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[1px] after:bg-gold hover:after:w-full after:transition-all after:duration-300"
+              className="text-xs uppercase tracking-widest text-zinc-700 hover:text-gold font-sans font-semibold transition-colors duration-300 relative after:content-[''] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-[1px] after:bg-gold hover:after:w-full after:transition-all after:duration-300"
             >
               {link.name}
             </Link>
@@ -71,7 +71,7 @@ export default function Navbar() {
         <div className="flex items-center space-x-4 sm:space-x-6">
           <Link
             href="/shop"
-            className="text-zinc-300 hover:text-gold transition-colors duration-300 hidden sm:block"
+            className="text-zinc-700 hover:text-gold transition-colors duration-300 hidden sm:block"
             title="Browse Shop"
           >
             <Search className="w-5 h-5" />
@@ -80,12 +80,12 @@ export default function Navbar() {
           {/* Wishlist Button */}
           <button
             onClick={() => setWishlistOpen(true)}
-            className="relative text-zinc-300 hover:text-gold transition-colors duration-300 cursor-pointer"
+            className="relative text-zinc-700 hover:text-gold transition-colors duration-300 cursor-pointer"
             title="Wishlist"
           >
             <Heart className="w-5 h-5" />
             {wishlist.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gold text-black font-sans font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center border border-black animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-gold text-black font-sans font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white shadow animate-pulse">
                 {wishlist.length}
               </span>
             )}
@@ -94,12 +94,12 @@ export default function Navbar() {
           {/* Cart Button */}
           <button
             onClick={() => setCartOpen(true)}
-            className="relative text-zinc-300 hover:text-gold transition-colors duration-300 cursor-pointer"
+            className="relative text-zinc-700 hover:text-gold transition-colors duration-300 cursor-pointer"
             title="Shopping Cart"
           >
             <ShoppingBag className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-gold text-black font-sans font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center border border-black">
+              <span className="absolute -top-1.5 -right-1.5 bg-gold text-black font-sans font-bold text-[9px] w-4.5 h-4.5 rounded-full flex items-center justify-center border border-white shadow">
                 {cartCount}
               </span>
             )}
@@ -123,7 +123,7 @@ export default function Navbar() {
                   key={link.name}
                   href={link.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-xs uppercase tracking-widest text-zinc-300 hover:text-gold font-sans font-semibold transition-colors duration-300"
+                  className="text-xs uppercase tracking-widest text-zinc-700 hover:text-gold font-sans font-semibold transition-colors duration-300"
                 >
                   {link.name}
                 </Link>
@@ -131,7 +131,7 @@ export default function Navbar() {
               <Link
                 href="/shop"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center text-xs uppercase tracking-widest text-zinc-300 hover:text-gold font-sans font-semibold transition-colors duration-300"
+                className="flex items-center text-xs uppercase tracking-widest text-zinc-700 hover:text-gold font-sans font-semibold transition-colors duration-300"
               >
                 <Search className="w-4 h-4 mr-2" /> Search Scent
               </Link>

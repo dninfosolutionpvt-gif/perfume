@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Filter, X, Search, RotateCcw, SlidersHorizontal } from 'lucide-react';
+import { Filter, X, Search, RotateCcw, SlidersHorizontal, Compass, ChevronRight } from 'lucide-react';
 import ProductCard from '../../components/ProductCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../../config';
 
 function ShopContent() {
   const searchParams = useSearchParams();
@@ -45,7 +46,7 @@ function ShopContent() {
         if (longevity !== 'All') queryParams.append('longevity', longevity);
         if (mood !== 'All') queryParams.append('mood', mood);
 
-        const response = await fetch(`http://localhost:5000/api/products?${queryParams.toString()}`);
+        const response = await fetch(`${API_BASE_URL}/api/products?${queryParams.toString()}`);
         const data = await response.json();
         setProducts(data);
       } catch (error) {
@@ -55,135 +56,157 @@ function ShopContent() {
         const offlineFallback = [
           {
             id: 1,
-            name: 'Oud Midnight',
-            price: 3499.00,
+            name: 'Orova Purple Oud',
+            price: 3599.00,
             gender: 'Unisex',
             fragrance_type: 'Woody',
             occasion: 'Date Night',
-            longevity: '8+ Hours',
+            longevity: '12+ Hours',
             mood: 'Bold',
-            description: 'A rich, hypnotic blend of dark agarwood (oud) and sweet damask rose.',
+            description: 'A dark, hypnotic oriental masterpiece with rich agarwood (oud), warm amber, and leather.',
             image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Saffron', 'Nutmeg'],
-            heart_notes: ['Damask Rose', 'Jasmine'],
-            base_notes: ['Oud (Agarwood)', 'Amber'],
-            sillage: 'Heavy',
+            top_notes: ['Saffron', 'Pink Pepper', 'Nutmeg'],
+            heart_notes: ['Rich Oud', 'Warm Amber'],
+            base_notes: ['Precious Leather', 'Patchouli'],
+            sillage: 'Strong',
             projection: 'Strong',
             rating: 4.9,
             reviews_count: 142,
             stock: 8,
-            inspired_by: 'Oud Wood'
+            inspired_by: 'Orova Paris Purple Oud Formula'
           },
           {
             id: 2,
-            name: 'Citrus Breeze',
-            price: 2199.00,
-            gender: 'Men',
-            fragrance_type: 'Citrus',
-            occasion: 'Gym',
-            longevity: '4-6 Hours',
-            mood: 'Fresh',
-            description: 'An explosive burst of crisp Mediterranean lemon and bitter bergamot.',
+            name: 'Orova Amber Oud',
+            price: 3699.00,
+            gender: 'Unisex',
+            fragrance_type: 'Oriental',
+            occasion: 'Winter',
+            longevity: '12+ Hours',
+            mood: 'Bold',
+            description: 'An opulent, deeply warming blend of precious oud oil, rich golden amber, and soft exotic woods.',
             image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Lemon', 'Bergamot'],
-            heart_notes: ['Sea Salt', 'Lavender'],
-            base_notes: ['Cedarwood', 'Oakmoss'],
-            sillage: 'Moderate',
-            projection: 'Moderate',
-            rating: 4.7,
+            top_notes: ['Warm Amber', 'Labdanum', 'Cinnamon'],
+            heart_notes: ['Cambodian Oud', 'Guaiac Wood'],
+            base_notes: ['Soft Vanilla', 'Sandalwood'],
+            sillage: 'Heavy',
+            projection: 'Strong',
+            rating: 4.9,
             reviews_count: 98,
-            stock: 15,
-            inspired_by: 'Dior Sauvage'
+            stock: 7,
+            inspired_by: 'Orova Paris Amber Oud Formula'
           },
           {
             id: 3,
-            name: 'Velvet Bloom',
-            price: 2899.00,
-            gender: 'Women',
+            name: 'Orova Elixir',
+            price: 3499.00,
+            gender: 'Unisex',
             fragrance_type: 'Floral',
             occasion: 'Party',
             longevity: '8+ Hours',
             mood: 'Romantic',
-            description: 'A luxurious, ultra-feminine bouquet of white tuberose and vanilla.',
+            description: 'An intoxicating, sweet gourmand unisex fragrance with wild strawberry and vanilla pod absolute.',
             image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Pink Pepper', 'Pear'],
-            heart_notes: ['Tuberose', 'Rose'],
-            base_notes: ['Vanilla', 'Patchouli'],
-            sillage: 'Strong',
-            projection: 'Strong',
+            top_notes: ['Wild Strawberry', 'Sweet Berries', 'Bergamot'],
+            heart_notes: ['Vanilla Pod Absolute', 'Fresh Jasmine'],
+            base_notes: ['Cashmere Musk', 'Sandalwood'],
+            sillage: 'Moderate',
+            projection: 'Moderate',
             rating: 4.8,
             reviews_count: 86,
-            stock: 7,
-            inspired_by: 'My Way'
+            stock: 15,
+            inspired_by: 'Orova Paris Elixir Formula'
           },
           {
             id: 4,
-            name: 'Sandalwood Monarch',
+            name: 'Orova Santal Woods',
             price: 3299.00,
-            gender: 'Men',
+            gender: 'Unisex',
             fragrance_type: 'Woody',
             occasion: 'Office',
             longevity: 'All Day',
             mood: 'Elegant',
-            description: 'A warm, creamy Indian sandalwood core, sharpened by cedar.',
+            description: 'Authoritative, creamy, and soothing. A pristine blend of creamy Indian sandalwood and exotic cardamom.',
             image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Cardamom', 'Violet'],
-            heart_notes: ['Iris', 'Papyrus'],
-            base_notes: ['Sandalwood', 'Cedarwood'],
+            top_notes: ['Cardamom', 'Papyrus', 'Violet Accord'],
+            heart_notes: ['Creamy Sandalwood', 'Virginia Cedar'],
+            base_notes: ['Soft Musk', 'Warm Woody Notes'],
             sillage: 'Moderate',
             projection: 'Strong',
             rating: 4.9,
             reviews_count: 114,
             stock: 9,
-            inspired_by: 'Santal 33'
+            inspired_by: 'Orova Paris Santal Woods Formula'
           },
           {
             id: 5,
-            name: 'Blue Vague',
+            name: 'Orova Citrus Ocean',
             price: 2499.00,
             gender: 'Unisex',
             fragrance_type: 'Aquatic',
-            occasion: 'Summer',
+            occasion: 'Gym',
             longevity: '4-6 Hours',
             mood: 'Fresh',
-            description: 'An endless summer in a bottle. Shimmering marine accords, ozone, and wet stones.',
+            description: 'A bright, exhilarating burst of Italian bergamot, marine salt, and cold-pressed grapefruit.',
             image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Marine Accord', 'Grapefruit'],
-            heart_notes: ['Seaweed', 'Sage'],
-            base_notes: ['Driftwood', 'Vetiver'],
+            top_notes: ['Italian Bergamot', 'Grapefruit', 'Sea Salt'],
+            heart_notes: ['Marine Accord', 'Rosemary'],
+            base_notes: ['Sun-bleached Driftwood', 'White Musk'],
             sillage: 'Moderate',
             projection: 'Moderate',
             rating: 4.6,
             reviews_count: 74,
             stock: 12,
-            inspired_by: 'Wood Sage & Sea Salt'
+            inspired_by: 'Orova Paris Fresh Collection'
           },
           {
             id: 6,
-            name: 'Nuit Noir',
-            price: 3599.00,
-            gender: 'Women',
-            fragrance_type: 'Oriental',
-            occasion: 'Date Night',
-            longevity: 'All Day',
-            mood: 'Bold',
-            description: 'Seductive, mysterious, and intoxicating. Rich, dark roasted coffee beans and sweet vanilla.',
+            name: 'Orova Imperial Rose',
+            price: 3199.00,
+            gender: 'Unisex',
+            fragrance_type: 'Floral',
+            occasion: 'Office',
+            longevity: '8+ Hours',
+            mood: 'Romantic',
+            description: 'An absolute tribute to the luxury Turkish rose. Freshly plucked rose petals combined with sweet lychee.',
             image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
             image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Pear', 'Orange Blossom'],
-            heart_notes: ['Coffee Beans', 'Bitter Almond'],
-            base_notes: ['Vanilla', 'Patchouli'],
-            sillage: 'Strong',
+            top_notes: ['Turkish Rose Petals', 'Lychee', 'Pink Pepper'],
+            heart_notes: ['Peony', 'Damask Rose'],
+            base_notes: ['Virginia Cedarwood', 'White Amber'],
+            sillage: 'Moderate',
+            projection: 'Moderate',
+            rating: 4.8,
+            reviews_count: 105,
+            stock: 11,
+            inspired_by: 'Orova Paris Rose Collection'
+          },
+          {
+            id: 7,
+            name: 'Orova Paris Tuberose',
+            price: 3699.00,
+            gender: 'Unisex',
+            fragrance_type: 'Floral',
+            occasion: 'Evening',
+            longevity: '10+ Hours',
+            mood: 'Romantic',
+            description: 'A luxurious white floral fragrance crafted with creamy tuberose petals, soft vanilla, and sensual woods for an unforgettable signature scent. Experience the elegance of blooming tuberose blended with radiant florals and warm musk.',
+            image_front: '/orova_tuberose.png',
+            image_side: '/orova_tuberose.png',
+            top_notes: ['Pink Pepper', 'Creamy Peach', 'Orange Blossom'],
+            heart_notes: ['Creamy Tuberose', 'Blooming Jasmine', 'Radiant Florals'],
+            base_notes: ['Soft Vanilla', 'Sensual Woods', 'Warm Musk'],
+            sillage: 'Heavy',
             projection: 'Strong',
-            rating: 4.9,
-            reviews_count: 156,
-            stock: 5,
-            inspired_by: 'Black Opium'
+            rating: 5.0,
+            reviews_count: 189,
+            stock: 12,
+            inspired_by: 'Orova Paris Signature Formula'
           }
         ];
 
@@ -213,28 +236,31 @@ function ShopContent() {
       } finally {
         setLoading(false);
       }
-    }, [searchQuery, gender, type, occasion, longevity, mood]);
+    }
 
-    // Push filters state into URL
-    const updateUrlParams = (key, value) => {
-      const current = new URLSearchParams(Array.from(searchParams.entries()));
-      if (value === 'All' || !value) {
-        current.delete(key);
-      } else {
-        current.set(key, value);
-      }
-      router.push(`/shop?${current.toString()}`);
-    };
+    fetchFilteredProducts();
+  }, [searchQuery, gender, type, occasion, longevity, mood]);
 
-    const handleReset = () => {
-      setSearchQuery('');
-      setGender('All');
-      setType('All');
-      setOccasion('All');
-      setLongevity('All');
-      setMood('All');
-      router.push('/shop');
-    };
+  // Push filters state into URL
+  const updateUrlParams = (key, value) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (value === 'All' || !value) {
+      current.delete(key);
+    } else {
+      current.set(key, value);
+    }
+    router.push(`/shop?${current.toString()}`);
+  };
+
+  const handleReset = () => {
+    setSearchQuery('');
+    setGender('All');
+    setType('All');
+    setOccasion('All');
+    setLongevity('All');
+    setMood('All');
+    router.push('/shop');
+  };
 
   const filterOptions = {
     gender: ['All', 'Men', 'Women', 'Unisex'],
@@ -246,7 +272,7 @@ function ShopContent() {
 
   // Helper component for filter groups
   const FilterGroup = ({ label, currentVal, setVal, options, paramKey }) => (
-    <div className="space-y-2 border-b border-zinc-900 pb-5">
+    <div className="space-y-2 border-b border-zinc-100 pb-5">
       <h4 className="font-serif text-xs uppercase tracking-widest text-gold font-bold">{label}</h4>
       <div className="flex flex-wrap gap-1.5 pt-1">
         {options.map((opt) => (
@@ -259,7 +285,7 @@ function ShopContent() {
             className={`px-3 py-1 rounded text-[10px] font-sans font-semibold uppercase tracking-wider transition-all cursor-pointer ${
               currentVal === opt
                 ? 'bg-gold text-black font-bold border border-gold'
-                : 'bg-zinc-950/40 text-zinc-400 border border-zinc-900 hover:border-zinc-800'
+                : 'bg-[#FAF8F5] text-zinc-600 border border-zinc-200 hover:border-gold/30'
             }`}
           >
             {opt}
@@ -270,19 +296,19 @@ function ShopContent() {
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-[#FAF8F5] text-[#1C1917] min-h-screen">
       
       {/* Page Header */}
       <div className="text-center max-w-xl mx-auto mb-10">
-        <span className="text-xs uppercase tracking-widest text-gold font-sans font-bold">Aura Luxe Registry</span>
-        <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-zinc-200 mt-1">Explore Scent Collection</h1>
-        <p className="text-zinc-500 text-xs sm:text-sm mt-2 leading-relaxed">
+        <span className="text-xs uppercase tracking-widest text-gold font-sans font-bold">Orova Paris Registry</span>
+        <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1C1917] mt-1">Explore Scent Collection</h1>
+        <p className="text-zinc-600 text-xs sm:text-sm mt-2 leading-relaxed">
           Filter by gender, fragrance families, occasion, sillage, or mood traits to match your signature profile.
         </p>
       </div>
 
       {/* Top Search & Controls Panel */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 p-4 rounded bg-zinc-950/40 border border-zinc-900">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 p-4 rounded bg-white border border-gold/10 shadow-sm">
         
         {/* Search Bar */}
         <div className="w-full md:max-w-md flex relative">
@@ -294,9 +320,9 @@ function ShopContent() {
               setSearchQuery(e.target.value);
               updateUrlParams('search', e.target.value);
             }}
-            className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold px-4 py-2.5 pl-10 rounded text-xs text-zinc-300 focus:outline-none transition-colors"
+            className="w-full bg-[#FAF8F5] border border-zinc-200 focus:border-gold px-4 py-2.5 pl-10 rounded text-xs text-zinc-700 focus:outline-none transition-colors"
           />
-          <Search className="w-4 h-4 text-zinc-600 absolute left-3 top-3.5" />
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-3.5" />
         </div>
 
         {/* Buttons */}
@@ -305,7 +331,7 @@ function ShopContent() {
           {/* Reset Filters */}
           <button
             onClick={handleReset}
-            className="px-4 py-2.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-gold border border-zinc-800 transition-all cursor-pointer flex items-center justify-center space-x-1.5 text-xs font-semibold uppercase tracking-wider"
+            className="px-4 py-2.5 rounded bg-white hover:bg-gold/5 text-zinc-600 hover:text-gold border border-zinc-200 transition-all cursor-pointer flex items-center justify-center space-x-1.5 text-xs font-semibold uppercase tracking-wider"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Reset Filters</span>
@@ -327,10 +353,10 @@ function ShopContent() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         
         {/* Desktop Sidebar Filters */}
-        <aside className="hidden lg:block space-y-6 p-5 border border-zinc-900 rounded bg-zinc-950/20 self-start">
-          <div className="flex items-center space-x-2 border-b border-zinc-900 pb-3">
+        <aside className="hidden lg:block space-y-6 p-5 border border-gold/10 rounded bg-white self-start shadow-sm">
+          <div className="flex items-center space-x-2 border-b border-zinc-100 pb-3">
             <SlidersHorizontal className="w-4 h-4 text-gold" />
-            <span className="font-serif text-sm text-zinc-200 font-bold uppercase tracking-wider">Refine By</span>
+            <span className="font-serif text-sm text-[#1C1917] font-bold uppercase tracking-wider">Refine By</span>
           </div>
 
           <FilterGroup label="Gender Persona" currentVal={gender} setVal={setGender} options={filterOptions.gender} paramKey="gender" />
@@ -345,20 +371,20 @@ function ShopContent() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-zinc-950/40 border border-zinc-900 rounded-md p-4 space-y-4 animate-pulse h-[390px]">
-                  <div className="bg-zinc-900 aspect-square rounded w-full" />
-                  <div className="h-4 bg-zinc-900 rounded w-2/3" />
-                  <div className="h-3 bg-zinc-900 rounded w-1/2" />
-                  <div className="h-8 bg-zinc-900 rounded w-full mt-4" />
+                <div key={i} className="bg-white border border-zinc-200 rounded-md p-4 space-y-4 animate-pulse h-[390px]">
+                  <div className="bg-zinc-100 aspect-square rounded w-full" />
+                  <div className="h-4 bg-zinc-100 rounded w-2/3" />
+                  <div className="h-3 bg-zinc-100 rounded w-1/2" />
+                  <div className="h-8 bg-zinc-100 rounded w-full mt-4" />
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="h-96 flex flex-col items-center justify-center text-center p-8 bg-zinc-950/40 border border-zinc-900 rounded-lg space-y-4">
-              <Compass className="w-16 h-16 text-zinc-700 stroke-[1]" />
-              <h3 className="font-serif text-xl text-zinc-300">No Matching Perfumes</h3>
-              <p className="text-zinc-500 text-sm max-w-sm">
-                We couldn\'t find any fragrances matching your exact filter selections. Try resetting your query parameters.
+            <div className="h-96 flex flex-col items-center justify-center text-center p-8 bg-white border border-gold/10 rounded-lg space-y-4 shadow-sm">
+              <Compass className="w-16 h-16 text-zinc-400 stroke-[1]" />
+              <h3 className="font-serif text-xl text-[#1C1917]">No Matching Perfumes</h3>
+              <p className="text-zinc-600 text-sm max-w-sm">
+                We couldn't find any fragrances matching your exact filter selections. Try resetting your query parameters.
               </p>
               <button
                 onClick={handleReset}
@@ -396,9 +422,9 @@ function ShopContent() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xs glass-intense z-50 flex flex-col shadow-2xl overflow-hidden p-5"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xs bg-white z-50 flex flex-col shadow-2xl overflow-hidden p-5"
             >
-              <div className="flex items-center justify-between border-b border-zinc-900 pb-4 mb-4">
+              <div className="flex items-center justify-between border-b border-zinc-100 pb-4 mb-4">
                 <span className="font-serif text-lg text-gold font-bold uppercase tracking-wider">Scent Filters</span>
                 <button onClick={() => setMobileFiltersOpen(false)} className="text-zinc-500 hover:text-gold cursor-pointer">
                   <X className="w-6 h-6" />
@@ -413,7 +439,7 @@ function ShopContent() {
                 <FilterGroup label="Mood Traits" currentVal={mood} setVal={setMood} options={filterOptions.mood} paramKey="mood" />
               </div>
 
-              <div className="pt-4 border-t border-zinc-900">
+              <div className="pt-4 border-t border-zinc-100">
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
                   className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs rounded transition-all cursor-pointer"
@@ -433,7 +459,7 @@ function ShopContent() {
 export default function Shop() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#FAF8F5]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold"></div>
       </div>
     }>

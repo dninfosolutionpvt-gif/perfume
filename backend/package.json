@@ -1,7 +1,7 @@
 {
   "name": "perfume-backend",
   "version": "1.0.0",
-  "description": "Express.js backend for Aura Luxe premium perfume website",
+  "description": "Express.js backend for Orova Paris premium perfume website",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",

@@ -28,7 +28,7 @@ export default function ProductCard({ product }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
       transition={{ duration: 0.4 }}
-      className="group relative flex flex-col bg-zinc-950/40 border-gold-transition rounded-md overflow-hidden"
+      className="group relative flex flex-col bg-white border border-gold-transition rounded-md overflow-hidden shadow-sm"
     >
       
       {/* Wishlist Button Overlay */}
@@ -38,7 +38,7 @@ export default function ProductCard({ product }) {
           e.stopPropagation();
           toggleWishlist(product);
         }}
-        className="absolute right-3 top-3 z-10 p-2 rounded-full glass border border-gold/10 hover:border-gold/30 hover:bg-gold/10 text-zinc-400 hover:text-gold transition-all duration-300 cursor-pointer"
+        className="absolute right-3 top-3 z-10 p-2 rounded-full glass border border-gold/15 hover:border-gold/30 hover:bg-gold/10 text-zinc-500 hover:text-gold transition-all duration-300 cursor-pointer"
         title={wishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}
       >
         <Heart className={`w-4 h-4 transition-transform duration-300 active:scale-125 ${wishlisted ? 'text-gold fill-gold' : ''}`} />
@@ -46,13 +46,13 @@ export default function ProductCard({ product }) {
 
       {/* Scarcity / Low Stock Indicator */}
       {product.stock <= 8 && (
-        <span className="absolute left-3 top-3 z-10 px-2 py-0.5 bg-red-950/80 border border-red-900 text-red-400 font-sans text-[10px] uppercase font-bold tracking-wider rounded">
+        <span className="absolute left-3 top-3 z-10 px-2 py-0.5 bg-red-50 border border-red-200 text-red-600 font-sans text-[10px] uppercase font-bold tracking-wider rounded shadow-sm">
           Only {product.stock} Left
         </span>
       )}
 
       {/* Image Area with Double Image Hover Transition */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-zinc-950 border-b border-zinc-900 cursor-pointer">
+      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-[#FAF8F5] border-b border-zinc-100 cursor-pointer">
         
         {/* Front Image */}
         <img
@@ -69,8 +69,8 @@ export default function ProductCard({ product }) {
         />
 
         {/* Floating Quick Shop CTA */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
-          <span className="text-[10px] uppercase tracking-widest text-gold font-sans font-bold border border-gold/40 px-3 py-1 rounded bg-black/75">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
+          <span className="text-[10px] uppercase tracking-widest text-gold font-sans font-bold border border-gold/40 px-3 py-1 rounded bg-white shadow-sm">
             Discover Scent
           </span>
         </div>
@@ -87,7 +87,7 @@ export default function ProductCard({ product }) {
 
           {/* Title */}
           <Link href={`/product/${product.id}`} className="cursor-pointer">
-            <h3 className="font-serif font-bold text-base text-zinc-200 group-hover:text-gold transition-colors duration-300 mb-1">
+            <h3 className="font-serif font-bold text-base text-[#1C1917] group-hover:text-gold transition-colors duration-300 mb-1">
               {product.name}
             </h3>
           </Link>
@@ -99,24 +99,24 @@ export default function ProductCard({ product }) {
                 <Star
                   key={i}
                   className={`w-3 h-3 ${
-                    i < Math.floor(product.rating) ? 'fill-gold stroke-gold' : 'stroke-zinc-700'
+                    i < Math.floor(product.rating) ? 'fill-gold stroke-gold' : 'stroke-zinc-300'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-[11px] font-sans text-zinc-400 font-semibold">{product.rating}</span>
-            <span className="text-[10px] font-sans text-zinc-600">({product.reviews_count} reviews)</span>
+            <span className="text-[11px] font-sans text-zinc-700 font-semibold">{product.rating}</span>
+            <span className="text-[10px] font-sans text-zinc-500">({product.reviews_count} reviews)</span>
           </div>
 
           {/* Tags */}
           <div className="flex flex-wrap gap-1.5 mb-4">
-            <span className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[9px] uppercase tracking-wider rounded">
+            <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
               {product.gender}
             </span>
-            <span className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[9px] uppercase tracking-wider rounded">
+            <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
               {product.longevity}
             </span>
-            <span className="px-2 py-0.5 bg-zinc-900 border border-zinc-800 text-zinc-400 text-[9px] uppercase tracking-wider rounded">
+            <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
               {product.fragrance_type}
             </span>
           </div>
@@ -124,7 +124,7 @@ export default function ProductCard({ product }) {
         </div>
 
         {/* Price & Add to Cart Action */}
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-900/60">
+        <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
           <span className="font-sans font-bold text-base text-gold">
             ₹{product.price.toLocaleString()}
           </span>

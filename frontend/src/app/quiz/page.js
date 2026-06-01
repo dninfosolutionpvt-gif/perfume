@@ -6,6 +6,7 @@ import { Compass, Check, ArrowRight, RefreshCw, ShoppingBag, Star, HelpCircle } 
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
+import { API_BASE_URL } from '../../config';
 
 export default function ScentQuiz() {
   const { addToCart } = useCart();
@@ -82,14 +83,14 @@ export default function ScentQuiz() {
         angle: 60,
         spread: 55,
         origin: { x: 0 },
-        colors: ['#d4af37', '#ffffff', '#8c6239']
+        colors: ['#a88020', '#ffffff', '#704e2d']
       });
       confetti({
         particleCount: 3,
         angle: 120,
         spread: 55,
         origin: { x: 1 },
-        colors: ['#d4af37', '#ffffff', '#8c6239']
+        colors: ['#a88020', '#ffffff', '#704e2d']
       });
 
       if (Date.now() < end) {
@@ -103,7 +104,7 @@ export default function ScentQuiz() {
     setStep(5);
 
     try {
-      const response = await fetch('http://localhost:5000/api/quiz', {
+      const response = await fetch(`${API_BASE_URL}/api/quiz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(answers)
@@ -247,6 +248,28 @@ export default function ScentQuiz() {
           reviews_count: 156,
           stock: 5,
           inspired_by: 'Black Opium'
+        },
+        {
+          id: 7,
+          name: 'Orova Paris Tuberose',
+          price: 3699.00,
+          gender: 'Women',
+          fragrance_type: 'Floral',
+          occasion: 'Evening',
+          longevity: '10+ Hours',
+          mood: 'Romantic',
+          description: 'A luxurious white floral fragrance crafted with creamy tuberose petals, soft vanilla, and sensual woods for an unforgettable signature scent. Experience the elegance of blooming tuberose blended with radiant florals and warm musk.',
+          image_front: '/orova_tuberose.png',
+          image_side: '/orova_tuberose.png',
+          top_notes: ['Pink Pepper', 'Creamy Peach', 'Orange Blossom'],
+          heart_notes: ['Creamy Tuberose', 'Blooming Jasmine', 'Radiant Florals'],
+          base_notes: ['Soft Vanilla', 'Sensual Woods', 'Warm Musk'],
+          sillage: 'Heavy',
+          projection: 'Strong',
+          rating: 5.0,
+          reviews_count: 189,
+          stock: 12,
+          inspired_by: 'Orova Paris Signature Formula'
         }
       ];
 
@@ -257,15 +280,15 @@ export default function ScentQuiz() {
         if (answers.sweetness === 'sweet' && ['Floral', 'Oriental'].includes(p.fragrance_type)) matchPercent += 15;
         if (answers.sweetness === 'strong' && ['Woody', 'Musky', 'Oriental'].includes(p.fragrance_type)) matchPercent += 15;
 
-        if (answers.daytime === 'day' && p.best_time.toLowerCase().includes('day')) matchPercent += 15;
-        if (answers.daytime === 'night' && p.best_time.toLowerCase().includes('night')) matchPercent += 15;
+        if (answers.daytime === 'day' && p.best_time?.toLowerCase().includes('day')) matchPercent += 15;
+        if (answers.daytime === 'night' && p.best_time?.toLowerCase().includes('night')) matchPercent += 15;
 
         if (answers.venue === 'office' && p.occasion.toLowerCase() === 'office') matchPercent += 15;
         if (answers.venue === 'party' && p.occasion.toLowerCase() === 'party') matchPercent += 15;
         if (answers.venue === 'date' && p.occasion.toLowerCase() === 'date night') matchPercent += 15;
 
-        if (answers.time_period === 'allday' && (p.longevity === 'All Day' || p.longevity === '8+ Hours')) matchPercent += 15;
-        if (answers.time_period === '8+' && (p.longevity === '8+ Hours' || p.longevity === 'All Day')) matchPercent += 15;
+        if (answers.time_period === 'allday' && (p.longevity === 'All Day' || p.longevity === '8+ Hours' || p.longevity === '10+ Hours')) matchPercent += 15;
+        if (answers.time_period === '8+' && (p.longevity === '8+ Hours' || p.longevity === 'All Day' || p.longevity === '10+ Hours')) matchPercent += 15;
         if (answers.time_period === '4-6' && p.longevity === '4-6 Hours') matchPercent += 15;
 
         return { ...p, matchPercent: Math.min(matchPercent, 100) };
@@ -289,7 +312,7 @@ export default function ScentQuiz() {
   const progress = step > 0 ? (step / questions.length) * 100 : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[75vh] flex flex-col justify-center">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 min-h-[75vh] flex flex-col justify-center bg-[#FAF8F5] text-[#1C1917]">
       <AnimatePresence mode="wait">
         
         {/* Step 0: Welcome / Intro */}
@@ -302,14 +325,14 @@ export default function ScentQuiz() {
             transition={{ duration: 0.5 }}
             className="text-center space-y-6 max-w-lg mx-auto"
           >
-            <div className="p-4 bg-zinc-950 border border-gold/15 rounded-full inline-flex text-gold justify-center gold-glow">
+            <div className="p-4 bg-white border border-gold/15 rounded-full inline-flex text-gold justify-center shadow-md">
               <Compass className="w-10 h-10 animate-spin-slow" />
             </div>
             
-            <div className="space-y-2">
-              <span className="text-xs uppercase tracking-widest text-gold font-sans font-bold">Interactive Scent Finder</span>
-              <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-zinc-100">Find Your Signature Scent</h1>
-              <p className="text-zinc-500 text-xs sm:text-sm leading-relaxed font-sans">
+            <div className="space-y-2 text-center">
+              <span className="text-xs uppercase tracking-widest text-gold font-sans font-bold block">Interactive Scent Finder</span>
+              <h1 className="font-serif text-3xl sm:text-4xl font-extrabold text-[#1C1917]">Find Your Signature Scent</h1>
+              <p className="text-zinc-650 text-xs sm:text-sm leading-relaxed font-sans max-w-md mx-auto">
                 Our olfactory matching algorithm evaluates your style preferences, longevity requirements, and mood traits to recommend the perfect French-imported luxury elixir.
               </p>
             </div>
@@ -317,7 +340,7 @@ export default function ScentQuiz() {
             <div className="pt-4">
               <button
                 onClick={() => setStep(1)}
-                className="w-full sm:w-auto px-10 py-3.5 bg-gold hover:bg-gold-dark text-black font-sans font-bold uppercase tracking-wider text-xs rounded transition-all duration-300 shadow-lg hover:shadow-gold/20 flex items-center justify-center cursor-pointer"
+                className="w-full sm:w-auto px-10 py-3.5 bg-gold hover:bg-gold-dark text-black font-sans font-bold uppercase tracking-wider text-xs rounded transition-all duration-300 shadow-lg hover:shadow-gold/20 flex items-center justify-center cursor-pointer mx-auto"
               >
                 <span>Start Scent Finder</span>
                 <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -338,17 +361,17 @@ export default function ScentQuiz() {
           >
             {/* Progress Bar & Headers */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-zinc-500 uppercase tracking-widest font-semibold">
+              <div className="flex items-center justify-between text-xs text-zinc-600 uppercase tracking-widest font-semibold">
                 <span>Step {step} of {questions.length}</span>
-                <span className="text-gold">{Math.round(progress)}% Complete</span>
+                <span className="text-gold font-bold">{Math.round(progress)}% Complete</span>
               </div>
-              <div className="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden border border-zinc-900">
+              <div className="w-full bg-zinc-200 h-1.5 rounded-full overflow-hidden border border-zinc-100 shadow-inner">
                 <div className="bg-gold h-full rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
               </div>
               
               <div className="text-center md:text-left">
-                <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-zinc-200 mt-2">{currentQuestion.title}</h2>
-                <p className="text-zinc-500 text-xs sm:text-sm mt-1">{currentQuestion.desc}</p>
+                <h2 className="font-serif text-2xl sm:text-3xl font-extrabold text-[#1C1917] mt-2">{currentQuestion.title}</h2>
+                <p className="text-zinc-600 text-xs sm:text-sm mt-1">{currentQuestion.desc}</p>
               </div>
             </div>
 
@@ -358,11 +381,11 @@ export default function ScentQuiz() {
                 <button
                   key={opt.value}
                   onClick={() => handleSelect(currentQuestion.id, opt.value)}
-                  className="p-6 rounded border border-zinc-900 bg-zinc-950/40 hover:border-gold/45 hover:bg-gold/5 text-left transition-all duration-300 group cursor-pointer flex flex-col justify-between h-40"
+                  className="p-6 rounded border border-zinc-200 bg-white hover:border-gold/30 hover:bg-gold/5 text-left transition-all duration-300 group cursor-pointer flex flex-col justify-between h-40 shadow-sm"
                 >
                   <div>
-                    <h3 className="font-serif text-lg font-bold text-zinc-200 group-hover:text-gold transition-colors">{opt.label}</h3>
-                    <p className="text-zinc-500 text-xs mt-2 leading-relaxed font-sans">{opt.desc}</p>
+                    <h3 className="font-serif text-lg font-bold text-[#1C1917] group-hover:text-gold transition-colors">{opt.label}</h3>
+                    <p className="text-zinc-600 text-xs mt-2 leading-relaxed font-sans">{opt.desc}</p>
                   </div>
                   <div className="flex items-center text-xs text-gold font-bold uppercase tracking-wider mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
                     <span>Select Option</span>
@@ -376,14 +399,14 @@ export default function ScentQuiz() {
             <div className="flex justify-between items-center pt-2">
               <button
                 onClick={handleBack}
-                className="px-4 py-2 text-xs text-zinc-500 hover:text-gold uppercase tracking-wider font-semibold font-sans cursor-pointer transition-colors"
+                className="px-4 py-2 text-xs text-zinc-600 hover:text-gold uppercase tracking-wider font-semibold font-sans cursor-pointer transition-colors"
               >
                 Go Back
               </button>
               {step === questions.length && answers[currentQuestion.id] && (
                 <button
                   onClick={calculateScentMatch}
-                  className="px-6 py-2.5 bg-gold hover:bg-gold-dark text-black font-sans font-bold uppercase tracking-wider text-xs rounded transition-colors cursor-pointer"
+                  className="px-6 py-2.5 bg-gold hover:bg-gold-dark text-black font-sans font-bold uppercase tracking-wider text-xs rounded transition-colors cursor-pointer shadow-sm"
                 >
                   Reveal Matches
                 </button>
@@ -402,8 +425,8 @@ export default function ScentQuiz() {
             className="text-center space-y-4 py-16"
           >
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gold mx-auto"></div>
-            <h2 className="font-serif text-xl text-zinc-200">Matching Scent Profiles...</h2>
-            <p className="text-zinc-500 text-xs uppercase tracking-widest font-sans">Evaluating sillage, projection, and mood notes</p>
+            <h2 className="font-serif text-xl text-[#1C1917]">Matching Scent Profiles...</h2>
+            <p className="text-zinc-600 text-xs uppercase tracking-widest font-sans">Evaluating sillage, projection, and mood notes</p>
           </motion.div>
         )}
 
@@ -419,12 +442,12 @@ export default function ScentQuiz() {
             
             {/* Header Results */}
             <div className="text-center space-y-2">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gold/10 border border-gold/25 rounded-full text-gold text-xs uppercase tracking-widest font-semibold">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-gold/10 border border-gold/25 rounded-full text-gold text-xs uppercase tracking-widest font-semibold shadow-sm">
                 <Compass className="w-3.5 h-3.5" />
                 <span>Quiz Complete</span>
               </div>
-              <h2 className="font-serif text-3xl font-extrabold text-zinc-200">Your Signature Scent Profile</h2>
-              <p className="text-zinc-500 text-xs sm:text-sm max-w-md mx-auto">
+              <h2 className="font-serif text-3xl font-extrabold text-[#1C1917]">Your Signature Scent Profile</h2>
+              <p className="text-zinc-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                 Based on your criteria, we have extracted the top 3 luxury inspired fragrances that best align with your persona.
               </p>
             </div>
@@ -434,12 +457,12 @@ export default function ScentQuiz() {
               {results.map((product, index) => (
                 <div
                   key={product.id}
-                  className={`rounded border p-4 bg-zinc-950/40 relative flex flex-col justify-between ${
-                    index === 0 ? 'border-gold gold-glow bg-gradient-to-b from-zinc-950/80 to-zinc-950/30' : 'border-zinc-900'
+                  className={`rounded border p-4 bg-white relative flex flex-col justify-between shadow-sm text-left ${
+                    index === 0 ? 'border-gold shadow-md bg-gradient-to-b from-white to-gold/5' : 'border-zinc-200'
                   }`}
                 >
                   {/* Match Percentage Overlay */}
-                  <div className="absolute top-3 right-3 px-2 py-0.5 bg-gold/10 border border-gold/30 rounded-full text-gold font-sans font-bold text-[9px] uppercase tracking-wider">
+                  <div className="absolute top-3 right-3 px-2 py-0.5 bg-gold/10 border border-gold/30 rounded-full text-gold font-sans font-bold text-[9px] uppercase tracking-wider shadow-sm">
                     {product.matchPercent ? `${product.matchPercent}% Match` : `${95 - index * 5}% Match`}
                   </div>
 
@@ -453,38 +476,38 @@ export default function ScentQuiz() {
                     <img
                       src={product.image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f'}
                       alt={product.name}
-                      className="w-full aspect-square object-cover rounded bg-zinc-900 border border-zinc-800"
+                      className="w-full aspect-square object-cover rounded bg-[#FAF8F5] border border-zinc-150 shadow-sm"
                     />
 
                     <div>
-                      <span className="text-[9px] text-zinc-500 uppercase tracking-widest block italic">
+                      <span className="text-[9px] text-zinc-550 uppercase tracking-widest block italic font-semibold">
                         Inspired by {product.inspired_by || 'Original'}
                       </span>
-                      <h3 className="font-serif text-base font-bold text-zinc-200 mt-0.5">{product.name}</h3>
+                      <h3 className="font-serif text-base font-bold text-[#1C1917] mt-0.5">{product.name}</h3>
                       
                       <div className="flex items-center space-x-1 mt-1 text-gold">
                         <Star className="w-3.5 h-3.5 fill-gold stroke-gold" />
-                        <span className="text-[11px] font-sans text-zinc-300 font-semibold">{product.rating}</span>
+                        <span className="text-[11px] font-sans text-zinc-700 font-semibold">{product.rating}</span>
                       </div>
 
-                      <p className="text-[11px] text-zinc-500 line-clamp-2 mt-2 leading-relaxed">
+                      <p className="text-[11px] text-zinc-600 line-clamp-2 mt-2 leading-relaxed">
                         {product.description}
                       </p>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-zinc-900/60 flex items-center justify-between">
+                  <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between">
                     <span className="text-sm font-sans font-bold text-gold">₹{product.price.toLocaleString()}</span>
                     <div className="flex items-center space-x-2">
                       <Link
                         href={`/product/${product.id}`}
-                        className="text-[10px] uppercase font-bold text-zinc-400 hover:text-gold tracking-wider font-sans py-1.5"
+                        className="text-[10px] uppercase font-bold text-zinc-500 hover:text-gold tracking-wider font-sans py-1.5 transition-colors"
                       >
                         Details
                       </Link>
                       <button
                         onClick={() => addToCart(product, 1)}
-                        className="px-3 py-1.5 bg-gold hover:bg-gold-dark text-black rounded text-[10px] font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                        className="px-3 py-1.5 bg-gold hover:bg-gold-dark text-black rounded text-[10px] font-sans font-bold uppercase tracking-wider transition-colors cursor-pointer shadow-sm"
                       >
                         Add
                       </button>
@@ -499,7 +522,7 @@ export default function ScentQuiz() {
             <div className="text-center pt-4">
               <button
                 onClick={handleRestart}
-                className="px-6 py-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-gold font-sans font-semibold uppercase tracking-wider text-xs rounded transition-colors flex items-center justify-center space-x-2 mx-auto cursor-pointer"
+                className="px-6 py-2.5 bg-white hover:bg-gold/5 border border-zinc-200 text-zinc-700 hover:text-gold font-sans font-semibold uppercase tracking-wider text-xs rounded transition-colors flex items-center justify-center space-x-2 mx-auto cursor-pointer shadow-sm"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Restart Scent Quiz</span>

@@ -13,106 +13,106 @@ app.use(express.json());
 const mockProducts = [
   {
     id: 1,
-    name: 'Oud Midnight',
-    price: 3499.00,
+    name: 'Orova Purple Oud',
+    price: 3599.00,
     gender: 'Unisex',
     fragrance_type: 'Woody',
     occasion: 'Date Night',
-    longevity: '8+ Hours',
+    longevity: '12+ Hours',
     mood: 'Bold',
-    description: 'A rich, hypnotic blend of dark agarwood (oud) and sweet damask rose. Crafted for evening confidence, this fragrance opens with warm saffron, evolving into a heart of sensual rose before settling into a deep, smoky amber and vetiver base.',
+    description: 'A dark, hypnotic oriental masterpiece. It opens with the dry spice of saffron and pink pepper, evolving into a precious heart of rich agarwood (oud) and warm amber, before leaving a trail of premium leather and patchouli.',
     image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Saffron', 'Nutmeg'],
-    heart_notes: ['Damask Rose', 'Jasmine'],
-    base_notes: ['Oud (Agarwood)', 'Amber', 'Patchouli'],
-    sillage: 'Heavy',
+    top_notes: ['Saffron', 'Pink Pepper', 'Nutmeg'],
+    heart_notes: ['Rich Oud', 'Warm Amber', 'Damask Rose'],
+    base_notes: ['Precious Leather', 'Patchouli', 'Smoky Vetiver'],
+    sillage: 'Strong',
     projection: 'Strong',
     best_season: 'Winter',
     best_time: 'Night',
     rating: 4.9,
     reviews_count: 142,
     stock: 8,
-    similar_to: 'Tom Ford Oud Wood',
-    inspired_by: 'Oud Wood'
+    similar_to: 'Luxury Niche Oud',
+    inspired_by: 'Orova Paris Purple Oud Formula'
   },
   {
     id: 2,
-    name: 'Citrus Breeze',
-    price: 2199.00,
-    gender: 'Men',
-    fragrance_type: 'Citrus',
-    occasion: 'Gym',
-    longevity: '4-6 Hours',
-    mood: 'Fresh',
-    description: 'An explosive burst of crisp Mediterranean lemon and bitter bergamot, layered with aromatic marine salts and rosemary. Perfect for a refreshing gym workout or a hot summer day outdoors.',
+    name: 'Orova Amber Oud',
+    price: 3699.00,
+    gender: 'Unisex',
+    fragrance_type: 'Oriental',
+    occasion: 'Winter',
+    longevity: '12+ Hours',
+    mood: 'Bold',
+    description: 'An opulent, deeply warming blend of precious oud oil, rich golden amber, and soft exotic woods. Highlighted by warm vanilla and sweet patchouli, creating a magnetic and highly sophisticated evening aura.',
     image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Calabrian Lemon', 'Bergamot', 'Grapefruit'],
-    heart_notes: ['Sea Salt', 'Rosemary', 'Lavender'],
-    base_notes: ['Oakmoss', 'White Musk', 'Cedarwood'],
-    sillage: 'Moderate',
-    projection: 'Moderate',
-    best_season: 'Summer',
-    best_time: 'Day',
-    rating: 4.7,
+    top_notes: ['Warm Amber', 'Labdanum', 'Cinnamon'],
+    heart_notes: ['Cambodian Oud', 'Guaiac Wood', 'Sweet Patchouli'],
+    base_notes: ['Soft Vanilla', 'Sandalwood', 'Benzoin'],
+    sillage: 'Heavy',
+    projection: 'Strong',
+    best_season: 'Winter',
+    best_time: 'Night',
+    rating: 4.9,
     reviews_count: 98,
-    stock: 15,
-    similar_to: 'Dior Sauvage',
-    inspired_by: 'Dior Sauvage'
+    stock: 7,
+    similar_to: 'Niche Amber Oud Prestige',
+    inspired_by: 'Orova Paris Amber Oud Formula'
   },
   {
     id: 3,
-    name: 'Velvet Bloom',
-    price: 2899.00,
-    gender: 'Women',
+    name: 'Orova Elixir',
+    price: 3499.00,
+    gender: 'Unisex',
     fragrance_type: 'Floral',
     occasion: 'Party',
     longevity: '8+ Hours',
     mood: 'Romantic',
-    description: 'A luxurious, ultra-feminine bouquet of white tuberose, blooming jasmine, and velvet roses, softened by cream-infused vanilla and cashmeran wood. Designed to turn heads at celebrations and evening galas.',
+    description: 'An intoxicating, sweet gourmand unisex fragrance. A playful yet deep opening of sweet wild strawberries and soft berries, melting into a heart of rich vanilla pod absolute and fresh blossoms, finished with warm cashmere musk.',
     image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Pink Pepper', 'Pear'],
-    heart_notes: ['Tuberose', 'Jasmine Sambac', 'Red Rose'],
-    base_notes: ['Vanilla', 'Patchouli', 'Cashmere Wood'],
-    sillage: 'Strong',
-    projection: 'Strong',
+    top_notes: ['Wild Strawberry', 'Sweet Berries', 'Bergamot'],
+    heart_notes: ['Vanilla Pod Absolute', 'Fresh Jasmine', 'Heliotrope'],
+    base_notes: ['Cashmere Musk', 'Sandalwood', 'Tonka Bean'],
+    sillage: 'Moderate',
+    projection: 'Moderate',
     best_season: 'Spring',
     best_time: 'Night',
     rating: 4.8,
     reviews_count: 86,
-    stock: 7,
-    similar_to: 'Armani My Way',
-    inspired_by: 'My Way'
+    stock: 15,
+    similar_to: 'Niche Sweet Gourmand',
+    inspired_by: 'Orova Paris Elixir Formula'
   },
   {
     id: 4,
-    name: 'Sandalwood Monarch',
+    name: 'Orova Santal Woods',
     price: 3299.00,
-    gender: 'Men',
+    gender: 'Unisex',
     fragrance_type: 'Woody',
     occasion: 'Office',
     longevity: 'All Day',
     mood: 'Elegant',
-    description: 'Sophisticated and authoritative. A warm, creamy Indian sandalwood core, sharpened by dry cedar and spiced cardamom. The ideal companion for high-profile business meetings and daily office prestige.',
+    description: 'Authoritative, creamy, and soothing. A pristine blend of creamy Indian sandalwood, dry Australian cedar, and exotic cardamom. Clean, sophisticated, and perfectly suited for professional and all-day elegance.',
     image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Cardamom', 'Violet Accord'],
-    heart_notes: ['Papyrus', 'Iris'],
-    base_notes: ['Sandalwood', 'Cedarwood', 'Leather'],
+    top_notes: ['Cardamom', 'Papyrus', 'Violet Accord'],
+    heart_notes: ['Creamy Sandalwood', 'Virginia Cedar', 'Leather'],
+    base_notes: ['Soft Musk', 'Warm Woody Notes', 'Amber'],
     sillage: 'Moderate',
     projection: 'Strong',
     best_season: 'Autumn',
@@ -120,27 +120,27 @@ const mockProducts = [
     rating: 4.9,
     reviews_count: 114,
     stock: 9,
-    similar_to: 'Santal 33',
-    inspired_by: 'Le Labo Santal 33'
+    similar_to: 'Niche Santal Cream',
+    inspired_by: 'Orova Paris Santal Woods Formula'
   },
   {
     id: 5,
-    name: 'Blue Vague',
+    name: 'Orova Citrus Ocean',
     price: 2499.00,
     gender: 'Unisex',
     fragrance_type: 'Aquatic',
-    occasion: 'Summer',
+    occasion: 'Gym',
     longevity: '4-6 Hours',
     mood: 'Fresh',
-    description: 'An endless summer in a bottle. Shimmering marine accords, ozone, and wet stones meet the warmth of sun-bleached driftwood, vetiver, and crisp pine needles. Clean, breezy, and refreshing.',
+    description: 'A bright, exhilarating burst of Italian bergamot, marine salt, and cold-pressed grapefruit. It evokes a refreshing sea breeze along the Amalfi coast, settling into warm driftwood and clean white musk.',
     image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Marine Accord', 'Grapefruit'],
-    heart_notes: ['Seaweed', 'Eucalyptus', 'Sage'],
-    base_notes: ['Driftwood', 'Ambrette Seeds', 'Vetiver'],
+    top_notes: ['Italian Bergamot', 'Grapefruit', 'Sea Salt'],
+    heart_notes: ['Marine Accord', 'Rosemary', 'Mint'],
+    base_notes: ['Sun-bleached Driftwood', 'White Musk', 'Oakmoss'],
     sillage: 'Moderate',
     projection: 'Moderate',
     best_season: 'Summer',
@@ -148,49 +148,77 @@ const mockProducts = [
     rating: 4.6,
     reviews_count: 74,
     stock: 12,
-    similar_to: 'Jo Malone Wood Sage & Sea Salt',
-    inspired_by: 'Wood Sage & Sea Salt'
+    similar_to: 'Niche Fresh Marine',
+    inspired_by: 'Orova Paris Fresh Collection'
   },
   {
     id: 6,
-    name: 'Nuit Noir',
-    price: 3599.00,
-    gender: 'Women',
-    fragrance_type: 'Oriental',
-    occasion: 'Date Night',
-    longevity: 'All Day',
-    mood: 'Bold',
-    description: 'Seductive, mysterious, and intoxicating. Rich, dark roasted coffee beans combined with sweet vanilla pod absolute, orange blossom, and a base of smooth white musk. A true masterpiece for intimate night-outs.',
+    name: 'Orova Imperial Rose',
+    price: 3199.00,
+    gender: 'Unisex',
+    fragrance_type: 'Floral',
+    occasion: 'Office',
+    longevity: '8+ Hours',
+    mood: 'Romantic',
+    description: 'An absolute tribute to the luxury Turkish rose. Freshly plucked rose petals drenched in morning dew, combined with sweet lychee and warm pink pepper, resting on a base of soft cedarwood and clean musk.',
     image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
     image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: 'https://images.unsplash.com/photo-1508746829417-e6f548d8d6ed?auto=format&fit=crop&q=80&w=600',
     image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-    top_notes: ['Pear', 'Orange Blossom'],
-    heart_notes: ['Coffee Beans', 'Bitter Almond', 'Licorice'],
-    base_notes: ['Vanilla', 'Patchouli', 'Cedarwood', 'Cashmere'],
-    sillage: 'Strong',
+    top_notes: ['Turkish Rose Petals', 'Lychee', 'Pink Pepper'],
+    heart_notes: ['Peony', 'Damask Rose', 'Magnolia'],
+    base_notes: ['Virginia Cedarwood', 'White Amber', 'Vetiver'],
+    sillage: 'Moderate',
+    projection: 'Moderate',
+    best_season: 'Spring',
+    best_time: 'Day/Night',
+    rating: 4.8,
+    reviews_count: 105,
+    stock: 11,
+    similar_to: 'Niche Fresh Rose',
+    inspired_by: 'Orova Paris Rose Collection'
+  },
+  {
+    id: 7,
+    name: 'Orova Paris Tuberose',
+    price: 3699.00,
+    gender: 'Unisex',
+    fragrance_type: 'Floral',
+    occasion: 'Evening',
+    longevity: '10+ Hours',
+    mood: 'Romantic',
+    description: 'A luxurious white floral fragrance crafted with creamy tuberose petals, soft vanilla, and sensual woods for an unforgettable signature scent. Experience the elegance of blooming tuberose blended with radiant florals and warm musk.',
+    image_front: '/orova_tuberose.png',
+    image_side: '/orova_tuberose.png',
+    image_lifestyle: '/orova_tuberose.png',
+    image_spray: '/orova_tuberose.png',
+    image_box: '/orova_tuberose.png',
+    top_notes: ['Pink Pepper', 'Creamy Peach', 'Orange Blossom'],
+    heart_notes: ['Creamy Tuberose', 'Blooming Jasmine', 'Radiant Florals'],
+    base_notes: ['Soft Vanilla', 'Sensual Woods', 'Warm Musk'],
+    sillage: 'Heavy',
     projection: 'Strong',
-    best_season: 'Winter',
-    best_time: 'Night',
-    rating: 4.9,
-    reviews_count: 156,
-    stock: 5,
-    similar_to: 'YSL Black Opium',
-    inspired_by: 'Black Opium'
+    best_season: 'All-Season',
+    best_time: 'Day/Night',
+    rating: 5.0,
+    reviews_count: 189,
+    stock: 12,
+    similar_to: 'Niche White Floral Elegance',
+    inspired_by: 'Orova Paris Signature Formula'
   }
 ];
 
 const mockReviews = {
   1: [
-    { id: 1, user_name: 'Aarav Mehta', rating: 5, comment: 'Absolutely exquisite! The oud has a very smooth opening and stays on my skin for more than 10 hours. Definitely buying another bottle.', created_at: new Date() },
-    { id: 2, user_name: 'Priya Sharma', rating: 5, comment: 'Smells very premium, like a niche perfume. The rose and saffron combination is gorgeous.', created_at: new Date() }
+    { id: 1, user_name: 'Aarav Mehta', rating: 5, comment: 'Absolutely exquisite! The Purple Oud has a very smooth opening and stays on my skin for more than 10 hours. Definitely buying another bottle.', created_at: new Date() },
+    { id: 2, user_name: 'Priya Sharma', rating: 5, comment: 'Smells very premium, like a niche perfume. The rose and saffron combination in Purple Oud is gorgeous.', created_at: new Date() }
   ],
   2: [
-    { id: 3, user_name: 'Kabir Malhotra', rating: 4, comment: 'Very fresh and uplifting. Great for everyday use, especially before gym workouts.', created_at: new Date() }
+    { id: 3, user_name: 'Kabir Malhotra', rating: 5, comment: 'Very premium Amber Oud. Perfectly warm and sweet for cooler days. Great projection!', created_at: new Date() }
   ],
   3: [
-    { id: 4, user_name: 'Neha Patel', rating: 5, comment: 'I wore this to a wedding reception and got so many compliments! It has a heavy, elegant floral trail.', created_at: new Date() }
+    { id: 4, user_name: 'Neha Patel', rating: 5, comment: 'I wore Orova Elixir to a wedding reception and got so many compliments! It has a heavy, elegant sweet trail.', created_at: new Date() }
   ],
   4: [
     { id: 5, user_name: 'Rohan Das', rating: 5, comment: 'Extremely professional and clean sandalwood scent. Perfect for office wear. Worth every rupee.', created_at: new Date() }
@@ -199,11 +227,61 @@ const mockReviews = {
     { id: 6, user_name: 'Vikram Singh', rating: 4, comment: 'Very refreshing and natural salty beach scent. I wish it lasted a bit longer, but it is great for hot summer days.', created_at: new Date() }
   ],
   6: [
-    { id: 7, user_name: 'Ananya Sen', rating: 5, comment: 'This is pure luxury in a bottle. The coffee and vanilla make a beautiful intoxicating combo.', created_at: new Date() }
+    { id: 7, user_name: 'Ananya Sen', rating: 5, comment: 'Gorgeous rose blend. Fresh, elegant, and turns heads everywhere.', created_at: new Date() }
+  ],
+  7: [
+    { id: 8, user_name: 'Shreya Ghoshal', rating: 5, comment: 'Stunning white floral fragrance! The creamy tuberose is so long lasting. Absolutely gorgeous.', created_at: new Date() },
+    { id: 9, user_name: 'Meera Rajput', rating: 5, comment: 'Rich, elegant, and smells exactly like luxury Grasse tuberose blooms. Worth every single rupee.', created_at: new Date() }
   ]
 };
 
-const mockOrders = [];
+const mockOrders = [
+  {
+    id: 1001,
+    customer_name: 'Aarav Mehta',
+    customer_email: 'aarav.mehta@gmail.com',
+    phone: '9876543210',
+    address: 'Flat 402, Sea Breeze Apartments, Bandra West',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    pincode: '400050',
+    total_amount: 3599.00,
+    payment_method: 'UPI',
+    payment_status: 'Paid',
+    status: 'Delivered',
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 1002,
+    customer_name: 'Neha Patel',
+    customer_email: 'neha.patel@yahoo.com',
+    phone: '8765432109',
+    address: '12, Orchid Villa, Satellite',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+    pincode: '380015',
+    total_amount: 5798.00,
+    payment_method: 'COD',
+    payment_status: 'Pending',
+    status: 'Shipped',
+    created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000)
+  },
+  {
+    id: 1003,
+    customer_name: 'Kabir Malhotra',
+    customer_email: 'kabir.m@outlook.com',
+    phone: '7654321098',
+    address: 'H-18, Green Park Extension',
+    city: 'New Delhi',
+    state: 'Delhi',
+    pincode: '110016',
+    total_amount: 2499.00,
+    payment_method: 'UPI',
+    payment_status: 'Paid',
+    status: 'Placed',
+    created_at: new Date()
+  }
+];
 
 // 1. Get All Products (with filters)
 app.get('/api/products', async (req, res) => {
@@ -486,6 +564,138 @@ app.post('/api/orders', async (req, res) => {
     }
 
     return res.status(201).json({ success: true, orderId, order: newOrder });
+  }
+});
+
+// --- ADMIN API ENDPOINTS ---
+
+// Get all orders for admin panel
+app.get('/api/admin/orders', async (req, res) => {
+  try {
+    const { rows } = await db.query('SELECT * FROM orders ORDER BY created_at DESC');
+    return res.json(rows);
+  } catch (error) {
+    console.warn('⚠️ DB orders query failed, falling back to mock orders.');
+    return res.json(mockOrders);
+  }
+});
+
+// Update order status/payment
+app.put('/api/admin/orders/:id', async (req, res) => {
+  const orderId = parseInt(req.params.id, 10);
+  const { status, payment_status } = req.body;
+  try {
+    const { rows } = await db.query(
+      'UPDATE orders SET status = COALESCE($1, status), payment_status = COALESCE($2, payment_status) WHERE id = $3 RETURNING *',
+      [status, payment_status, orderId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Order not found' });
+    return res.json(rows[0]);
+  } catch (error) {
+    console.warn('⚠️ DB order update failed, updating in-memory mock order.');
+    const order = mockOrders.find(o => o.id === orderId);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (status) order.status = status;
+    if (payment_status) order.payment_status = payment_status;
+    return res.json(order);
+  }
+});
+
+// Get admin stats dashboard overview
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    const totalOrdersRes = await db.query('SELECT COUNT(*) FROM orders');
+    const revenueRes = await db.query('SELECT SUM(total_amount) FROM orders WHERE payment_status = $1', ['Paid']);
+    const productsRes = await db.query('SELECT COUNT(*) FROM products');
+    const reviewsRes = await db.query('SELECT COUNT(*) FROM reviews');
+
+    return res.json({
+      totalOrders: parseInt(totalOrdersRes.rows[0].count, 10) || 0,
+      totalRevenue: parseFloat(revenueRes.rows[0].sum || 0),
+      totalProducts: parseInt(productsRes.rows[0].count, 10) || 0,
+      totalReviews: parseInt(reviewsRes.rows[0].count, 10) || 0,
+    });
+  } catch (error) {
+    console.warn('⚠️ DB stats query failed, calculating in-memory.');
+    const totalOrders = mockOrders.length;
+    const totalRevenue = mockOrders.reduce((sum, o) => o.payment_status === 'Paid' ? sum + Number(o.total_amount) : sum, 0);
+    const totalProducts = mockProducts.length;
+    const totalReviews = Object.values(mockReviews).reduce((sum, r) => sum + r.length, 0);
+    return res.json({
+      totalOrders,
+      totalRevenue,
+      totalProducts,
+      totalReviews,
+    });
+  }
+});
+
+// Admin Add new product
+app.post('/api/admin/products', async (req, res) => {
+  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection } = req.body;
+  if (!name || !price || !gender || !fragrance_type || !occasion || !longevity || !mood || !description) {
+    return res.status(400).json({ error: 'Missing required product fields' });
+  }
+
+  try {
+    const { rows } = await db.query(
+      `INSERT INTO products (name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, image_side, image_lifestyle, image_spray, image_box, top_notes, heart_notes, base_notes, sillage, projection, best_season, best_time, rating, reviews_count, stock, similar_to, inspired_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $9, $9, $9, $10, $11, $12, $13, $14, $15, $16, 5.0, 0, 10, $17, $18) RETURNING *`,
+      [
+        name, parseFloat(price), gender, fragrance_type, occasion, longevity, mood, description,
+        image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
+        ['Citrus', 'Spices'], ['Flora', 'Jasmine'], ['Musk', 'Amber'], sillage || 'Moderate', projection || 'Moderate', 'All-Season', 'Day/Night', 'Niche Perfume', inspired_by || 'Original Formula'
+      ]
+    );
+    return res.status(201).json(rows[0]);
+  } catch (error) {
+    console.warn('⚠️ DB product creation failed, saving to in-memory fallback.');
+    const newProduct = {
+      id: mockProducts.length + 1,
+      name,
+      price: parseFloat(price),
+      gender,
+      fragrance_type,
+      occasion,
+      longevity,
+      mood,
+      description,
+      image_front: image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
+      image_side: image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
+      image_lifestyle: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
+      image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
+      image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
+      top_notes: ['Saffron', 'Spices'],
+      heart_notes: ['Rose', 'Jasmine'],
+      base_notes: ['Amber', 'Musk'],
+      sillage: sillage || 'Moderate',
+      projection: projection || 'Moderate',
+      best_season: 'All-Season',
+      best_time: 'Day/Night',
+      rating: 5.0,
+      reviews_count: 0,
+      stock: 10,
+      similar_to: 'Niche Perfume',
+      inspired_by: inspired_by || 'Original Formula'
+    };
+    mockProducts.push(newProduct);
+    return res.status(201).json(newProduct);
+  }
+});
+
+// Admin Delete product
+app.delete('/api/admin/products/:id', async (req, res) => {
+  const productId = parseInt(req.params.id, 10);
+  try {
+    const { rowCount } = await db.query('DELETE FROM products WHERE id = $1', [productId]);
+    if (rowCount === 0) return res.status(404).json({ error: 'Product not found' });
+    return res.json({ success: true, message: 'Product deleted successfully' });
+  } catch (error) {
+    console.warn('⚠️ DB product delete failed, deleting from in-memory.');
+    const idx = mockProducts.findIndex(p => p.id === productId);
+    if (idx === -1) return res.status(404).json({ error: 'Product not found' });
+    mockProducts.splice(idx, 1);
+    return res.json({ success: true, message: 'Product deleted successfully in-memory' });
   }
 });
 

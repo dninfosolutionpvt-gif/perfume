@@ -21,8 +21,8 @@ const montserrat = Montserrat({
 
 // Premium SEO Metadata
 export const metadata = {
-  title: "Aura Luxe | Premium Luxury Inspired Perfumes & Fragrances",
-  description: "Discover L'Élixir collections by Aura Luxe. Highly concentrated premium perfumes inspired by world-famous luxury scents. Find your signature scent today.",
+  title: "Orova Paris | Premium Luxury Inspired Perfumes & Fragrances",
+  description: "Discover L'Élixir collections by Orova Paris. Highly concentrated premium perfumes inspired by world-famous luxury scents. Find your signature scent today.",
 };
 
 export const viewport = {

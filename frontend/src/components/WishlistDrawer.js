@@ -45,7 +45,7 @@ export default function WishlistDrawer() {
               </div>
               <button
                 onClick={() => setWishlistOpen(false)}
-                className="text-zinc-400 hover:text-gold transition-colors duration-300 cursor-pointer"
+                className="text-zinc-700 hover:text-gold transition-colors duration-300 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -55,9 +55,9 @@ export default function WishlistDrawer() {
             <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
               {wishlist.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
-                  <Heart className="w-16 h-16 text-zinc-600 stroke-[1]" />
-                  <h3 className="font-serif text-xl text-zinc-300">Your Wishlist is Empty</h3>
-                  <p className="text-zinc-500 text-sm max-w-xs">
+                  <Heart className="w-16 h-16 text-zinc-400 stroke-[1]" />
+                  <h3 className="font-serif text-xl text-[#1C1917] font-bold">Your Wishlist is Empty</h3>
+                  <p className="text-zinc-500 text-sm max-w-xs leading-relaxed">
                     Browse our luxury fragrances and tap the heart icon to save your favorites here.
                   </p>
                   <button
@@ -72,16 +72,16 @@ export default function WishlistDrawer() {
                   {wishlist.map((product) => (
                     <div
                       key={product.id}
-                      className="flex items-center space-x-4 p-3 rounded bg-zinc-950/40 border border-zinc-900"
+                      className="flex items-center space-x-4 p-3 rounded bg-white border border-gold/10 shadow-sm"
                     >
                       <img
                         src={product.image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f'}
                         alt={product.name}
-                        className="w-16 h-16 object-cover rounded bg-zinc-900 border border-zinc-800"
+                        className="w-16 h-16 object-cover rounded bg-[#FAF8F5] border border-zinc-150"
                       />
-                      <div className="flex-1">
-                        <h4 className="font-serif font-semibold text-sm text-zinc-200">{product.name}</h4>
-                        <p className="text-xs text-zinc-500 italic mb-1">Inspired by {product.inspired_by || 'Original Formula'}</p>
+                      <div className="flex-1 text-left">
+                        <h4 className="font-serif font-bold text-sm text-[#1C1917]">{product.name}</h4>
+                        <p className="text-[10px] text-zinc-500 italic mb-1">Inspired by {product.inspired_by || 'Original Formula'}</p>
                         <span className="text-sm font-semibold text-gold font-sans">
                           ₹{product.price.toLocaleString()}
                         </span>
@@ -92,14 +92,14 @@ export default function WishlistDrawer() {
                             addToCart(product, 1);
                             toggleWishlist(product); // Remove from wishlist on move-to-cart
                           }}
-                          className="p-2 rounded bg-gold hover:bg-gold-dark text-black transition-colors cursor-pointer"
+                          className="p-2 rounded bg-gold hover:bg-gold-dark text-black transition-colors cursor-pointer shadow-sm"
                           title="Add to Cart"
                         >
                           <ShoppingCart className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => toggleWishlist(product)}
-                          className="p-2 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-red-500 transition-colors border border-zinc-800 cursor-pointer"
+                          className="p-2 rounded bg-white hover:bg-gold/5 text-zinc-650 hover:text-red-500 transition-colors border border-zinc-200 cursor-pointer shadow-sm"
                           title="Remove from Wishlist"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -112,10 +112,10 @@ export default function WishlistDrawer() {
             </div>
 
             {/* Footer */}
-            <div className="p-5 border-t border-gold/15 bg-zinc-950/80">
+            <div className="p-5 border-t border-gold/15 bg-white shadow-inner">
               <button
                 onClick={() => setWishlistOpen(false)}
-                className="w-full py-3 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-gold border border-zinc-800 font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer"
+                className="w-full py-3 bg-white hover:bg-gold/5 text-zinc-700 hover:text-gold border border-zinc-200 font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer"
               >
                 Close Wishlist
               </button>

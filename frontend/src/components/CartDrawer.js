@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { X, Trash2, Plus, Minus, CreditCard, ShoppingBag, Truck, ArrowLeft, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE_URL } from '../config';
 
 export default function CartDrawer() {
   const {
@@ -41,7 +42,7 @@ export default function CartDrawer() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/orders', {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -115,7 +116,7 @@ export default function CartDrawer() {
                   setCartOpen(false);
                   if (checkoutStep === 'success') setCheckoutStep('cart');
                 }}
-                className="text-zinc-400 hover:text-gold transition-colors duration-300 cursor-pointer"
+                className="text-zinc-650 hover:text-gold transition-colors duration-300 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -127,19 +128,19 @@ export default function CartDrawer() {
                 <>
                   {/* Free Shipping Bar */}
                   {cart.length > 0 && (
-                    <div className="mb-6 p-4 rounded bg-zinc-900/50 border border-gold/10">
+                    <div className="mb-6 p-4 rounded bg-[#FAF8F5] border border-gold/10 shadow-sm">
                       <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="flex items-center text-zinc-300">
+                        <span className="flex items-center text-[#1C1917] font-semibold">
                           <Truck className="w-4 h-4 text-gold mr-1" />
                           {cartTotal >= freeShippingThreshold
                             ? 'You qualify for Free Shipping!'
                             : `Add ₹${freeShippingThreshold - cartTotal} more for Free Shipping`}
                         </span>
-                        <span className="text-gold font-semibold">
+                        <span className="text-gold font-bold">
                           {cartTotal >= freeShippingThreshold ? 'Free' : `₹${cartTotal}/${freeShippingThreshold}`}
                         </span>
                       </div>
-                      <div className="w-full bg-zinc-950 h-1.5 rounded-full overflow-hidden">
+                      <div className="w-full bg-zinc-200 h-1.5 rounded-full overflow-hidden">
                         <div
                           className="bg-gold h-full rounded-full transition-all duration-500"
                           style={{ width: `${progressPercent}%` }}
@@ -150,9 +151,9 @@ export default function CartDrawer() {
 
                   {cart.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-20">
-                      <ShoppingBag className="w-16 h-16 text-zinc-600 stroke-[1]" />
-                      <h3 className="font-serif text-xl text-zinc-300">Your Cart is Empty</h3>
-                      <p className="text-zinc-500 text-sm max-w-xs">
+                      <ShoppingBag className="w-16 h-16 text-zinc-400 stroke-[1]" />
+                      <h3 className="font-serif text-xl text-zinc-700 font-bold">Your Cart is Empty</h3>
+                      <p className="text-zinc-500 text-sm max-w-xs leading-relaxed">
                         Discover our signature perfume collection and choose your perfect match.
                       </p>
                       <button
@@ -167,27 +168,27 @@ export default function CartDrawer() {
                       {cart.map((item) => (
                         <div
                           key={item.id}
-                          className="flex items-center space-x-4 p-3 rounded bg-zinc-950/40 border border-zinc-900"
+                          className="flex items-center space-x-4 p-3 rounded bg-white border border-gold/10 shadow-sm"
                         >
                           <img
                             src={item.image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f'}
                             alt={item.name}
-                            className="w-16 h-16 object-cover rounded bg-zinc-900 border border-zinc-800"
+                            className="w-16 h-16 object-cover rounded bg-[#FAF8F5] border border-zinc-150"
                           />
-                          <div className="flex-1">
-                            <h4 className="font-serif font-semibold text-sm text-zinc-200">{item.name}</h4>
-                            <p className="text-xs text-zinc-500 italic mb-2">Inspired by {item.inspired_by || 'Original Formula'}</p>
+                          <div className="flex-1 text-left">
+                            <h4 className="font-serif font-bold text-sm text-[#1C1917]">{item.name}</h4>
+                            <p className="text-[10px] text-zinc-500 italic mb-2">Inspired by {item.inspired_by || 'Original Formula'}</p>
                             <div className="flex items-center space-x-2">
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="w-6 h-6 rounded-full bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-gold border border-zinc-800 transition-all cursor-pointer"
+                                className="w-6 h-6 rounded-full bg-white hover:bg-gold/5 flex items-center justify-center text-zinc-650 hover:text-gold border border-zinc-200 transition-all cursor-pointer shadow-sm"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
-                              <span className="text-xs text-zinc-300 w-6 text-center">{item.quantity}</span>
+                              <span className="text-xs text-[#1C1917] w-6 text-center font-semibold">{item.quantity}</span>
                               <button
                                 onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="w-6 h-6 rounded-full bg-zinc-900 hover:bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-gold border border-zinc-800 transition-all cursor-pointer"
+                                className="w-6 h-6 rounded-full bg-white hover:bg-gold/5 flex items-center justify-center text-zinc-650 hover:text-gold border border-zinc-200 transition-all cursor-pointer shadow-sm"
                               >
                                 <Plus className="w-3 h-3" />
                               </button>
@@ -199,7 +200,7 @@ export default function CartDrawer() {
                             </span>
                             <button
                               onClick={() => removeFromCart(item.id)}
-                              className="block mt-2 ml-auto text-zinc-500 hover:text-red-500 transition-colors duration-300 cursor-pointer"
+                              className="block mt-2 ml-auto text-zinc-400 hover:text-red-500 transition-colors duration-300 cursor-pointer"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -212,17 +213,17 @@ export default function CartDrawer() {
               )}
 
               {checkoutStep === 'checkout' && (
-                <form onSubmit={handleCheckoutSubmit} className="space-y-4">
+                <form onSubmit={handleCheckoutSubmit} className="space-y-4 text-left">
                   <button
                     type="button"
                     onClick={() => setCheckoutStep('cart')}
-                    className="flex items-center text-xs text-zinc-400 hover:text-gold cursor-pointer mb-2 transition-all"
+                    className="flex items-center text-xs text-zinc-500 hover:text-gold cursor-pointer mb-2 transition-all font-semibold uppercase tracking-wider"
                   >
                     <ArrowLeft className="w-4 h-4 mr-1" /> Back to Cart
                   </button>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Full Name</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Full Name</label>
                     <input
                       required
                       type="text"
@@ -230,12 +231,12 @@ export default function CartDrawer() {
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="e.g. Aarav Mehta"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                      className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Email Address</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Email Address</label>
                     <input
                       required
                       type="email"
@@ -243,12 +244,12 @@ export default function CartDrawer() {
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder="e.g. aarav@gmail.com"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                      className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Phone Number</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Phone Number</label>
                     <input
                       required
                       type="tel"
@@ -256,12 +257,12 @@ export default function CartDrawer() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="10-digit Mobile Number"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                      className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Shipping Address</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Shipping Address</label>
                     <textarea
                       required
                       name="address"
@@ -269,13 +270,13 @@ export default function CartDrawer() {
                       onChange={handleInputChange}
                       rows="2"
                       placeholder="Flat/House No., Street Name, Landmark"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all resize-none"
+                      className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all resize-none"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">City</label>
+                      <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">City</label>
                       <input
                         required
                         type="text"
@@ -283,11 +284,11 @@ export default function CartDrawer() {
                         value={formData.city}
                         onChange={handleInputChange}
                         placeholder="Mumbai"
-                        className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                        className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">State</label>
+                      <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">State</label>
                       <input
                         required
                         type="text"
@@ -295,13 +296,13 @@ export default function CartDrawer() {
                         value={formData.state}
                         onChange={handleInputChange}
                         placeholder="Maharashtra"
-                        className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                        className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Pincode</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Pincode</label>
                     <input
                       required
                       type="text"
@@ -309,21 +310,21 @@ export default function CartDrawer() {
                       value={formData.pincode}
                       onChange={handleInputChange}
                       placeholder="400001"
-                      className="w-full bg-zinc-950 border border-zinc-800 focus:border-gold p-2.5 rounded text-sm text-zinc-200 focus:outline-none transition-all"
+                      className="w-full bg-white border border-zinc-200 focus:border-gold p-2.5 rounded text-sm text-[#1C1917] focus:outline-none transition-all"
                     />
                   </div>
 
                   {/* Payment Method Selector */}
                   <div className="space-y-2 pt-2">
-                    <label className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Payment Option</label>
+                    <label className="text-[10px] text-zinc-700 uppercase tracking-widest font-semibold">Payment Option</label>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, payment_method: 'COD' })}
                         className={`p-3 rounded border text-xs font-semibold flex flex-col items-center justify-center transition-all cursor-pointer ${
                           formData.payment_method === 'COD'
-                            ? 'border-gold bg-gold/10 text-gold'
-                            : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700'
+                            ? 'border-gold bg-gold/10 text-gold shadow-sm'
+                            : 'border-zinc-200 bg-white text-zinc-600 hover:border-gold/30 shadow-sm'
                         }`}
                       >
                         <span>Cash On Delivery</span>
@@ -334,8 +335,8 @@ export default function CartDrawer() {
                         onClick={() => setFormData({ ...formData, payment_method: 'UPI' })}
                         className={`p-3 rounded border text-xs font-semibold flex flex-col items-center justify-center transition-all cursor-pointer ${
                           formData.payment_method === 'UPI'
-                            ? 'border-gold bg-gold/10 text-gold'
-                            : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:border-zinc-700'
+                            ? 'border-gold bg-gold/10 text-gold shadow-sm'
+                            : 'border-zinc-200 bg-white text-zinc-600 hover:border-gold/30 shadow-sm'
                         }`}
                       >
                         <span className="flex items-center"><CreditCard className="w-3.5 h-3.5 mr-1" /> UPI / Cards</span>
@@ -344,7 +345,7 @@ export default function CartDrawer() {
                     </div>
                   </div>
 
-                  {error && <p className="text-xs text-red-500 bg-red-950/20 p-2.5 border border-red-900 rounded">{error}</p>}
+                  {error && <p className="text-xs text-red-650 bg-red-50 p-2.5 border border-red-200 rounded">{error}</p>}
                 </form>
               )}
 
@@ -357,16 +358,16 @@ export default function CartDrawer() {
                   >
                     <CheckCircle className="w-20 h-20 text-gold" />
                   </motion.div>
-                  <h3 className="font-serif text-2xl text-zinc-100 font-bold">Your Order is Placed!</h3>
-                  <div className="bg-zinc-900/60 p-4 rounded border border-gold/10 max-w-xs text-sm text-zinc-300">
-                    <p className="mb-1 text-zinc-500 text-xs uppercase tracking-wider font-semibold">Order ID</p>
+                  <h3 className="font-serif text-2xl text-[#1C1917] font-bold">Your Order is Placed!</h3>
+                  <div className="bg-[#FAF8F5] p-4 rounded border border-gold/15 max-w-xs text-sm text-[#1C1917] shadow-sm">
+                    <p className="mb-1 text-zinc-550 text-xs uppercase tracking-wider font-semibold">Order ID</p>
                     <p className="font-mono text-gold font-bold text-lg">{orderId}</p>
-                    <p className="mt-3 text-xs text-zinc-400">
-                      We have sent a luxury dispatch details confirmation to <span className="text-zinc-200">{formData.email}</span>.
+                    <p className="mt-3 text-xs text-zinc-650">
+                      We have sent a luxury dispatch details confirmation to <span className="text-zinc-800 font-semibold">{formData.email}</span>.
                     </p>
                   </div>
-                  <p className="text-zinc-400 text-xs max-w-xs italic">
-                    Thank you for choosing AURA LUXE. Leave a signature wherever you go.
+                  <p className="text-zinc-600 text-xs max-w-xs italic">
+                    Thank you for choosing OROVA PARIS. Leave a signature wherever you go.
                   </p>
                   <button
                     onClick={() => {
@@ -383,19 +384,19 @@ export default function CartDrawer() {
 
             {/* Footer Summary (Only for 'cart' or 'checkout' step) */}
             {cart.length > 0 && checkoutStep !== 'success' && (
-              <div className="p-5 border-t border-gold/15 bg-zinc-950/80">
+              <div className="p-5 border-t border-gold/15 bg-white shadow-inner">
                 <div className="space-y-2 mb-4 text-sm">
-                  <div className="flex justify-between text-zinc-400">
+                  <div className="flex justify-between text-zinc-600">
                     <span>Scent Selection Subtotal:</span>
                     <span className="font-mono">₹{cartTotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-zinc-400">
+                  <div className="flex justify-between text-zinc-600">
                     <span>Luxury Delivery:</span>
-                    <span className="font-mono">
+                    <span className="font-mono font-bold">
                       {shippingCharge === 0 ? <span className="text-gold">FREE</span> : `₹${shippingCharge}`}
                     </span>
                   </div>
-                  <div className="flex justify-between text-zinc-200 font-bold text-lg pt-2 border-t border-zinc-900">
+                  <div className="flex justify-between text-[#1C1917] font-bold text-lg pt-2 border-t border-zinc-100">
                     <span className="font-serif">Total Amount:</span>
                     <span className="text-gold font-mono">₹{(cartTotal + shippingCharge).toLocaleString()}</span>
                   </div>
@@ -404,7 +405,7 @@ export default function CartDrawer() {
                 {checkoutStep === 'cart' ? (
                   <button
                     onClick={() => setCheckoutStep('checkout')}
-                    className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center"
+                    className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center font-bold"
                   >
                     Proceed To Details
                   </button>
@@ -412,7 +413,7 @@ export default function CartDrawer() {
                   <button
                     onClick={handleCheckoutSubmit}
                     disabled={loading}
-                    className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center disabled:opacity-50"
+                    className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center disabled:opacity-50 font-bold"
                   >
                     {loading ? 'Processing Scent Order...' : 'Confirm Cash On Delivery'}
                   </button>

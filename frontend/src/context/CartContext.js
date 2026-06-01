@@ -14,8 +14,8 @@ export function CartProvider({ children }) {
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const storedCart = localStorage.getItem('aura_luxe_cart');
-      const storedWishlist = localStorage.getItem('aura_luxe_wishlist');
+      const storedCart = localStorage.getItem('orova_paris_cart');
+      const storedWishlist = localStorage.getItem('orova_paris_wishlist');
       if (storedCart) setCart(JSON.parse(storedCart));
       if (storedWishlist) setWishlist(JSON.parse(storedWishlist));
     } catch (e) {
@@ -28,7 +28,7 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (!isLoaded) return;
     try {
-      localStorage.setItem('aura_luxe_cart', JSON.stringify(cart));
+      localStorage.setItem('orova_paris_cart', JSON.stringify(cart));
     } catch (e) {
       console.error(e);
     }
@@ -37,7 +37,7 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (!isLoaded) return;
     try {
-      localStorage.setItem('aura_luxe_wishlist', JSON.stringify(wishlist));
+      localStorage.setItem('orova_paris_wishlist', JSON.stringify(wishlist));
     } catch (e) {
       console.error(e);
     }
