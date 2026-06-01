@@ -1,20 +1,46 @@
 <?php
 /**
- * Orova Paris - Automated Premium Perfume Catalog Seeder
- * This script inserts signature perfumes into WooCommerce with custom specifications.
+ * Orova Paris - WooCommerce Auto-Configurator & Premium Catalog Seeder
+ * This script programmatically completes the WooCommerce onboarding wizard, 
+ * sets US targeting settings, and seeds premium perfume products.
  */
 
 // 1. Load WordPress Core environment
 require_once('wp-load.php');
 
-echo "Starting Premium Perfume Catalog seeding...\n";
+echo "Initializing WooCommerce Auto-Configurator...\n";
 
 // Ensure WooCommerce is active
-if (!class_exists('WC_Product')) {
-    die("Error: WooCommerce is not active on this site. Please activate WooCommerce first.\n");
+if (!class_exists('WooCommerce')) {
+    die("Error: WooCommerce is not active on this site. Please make sure WooCommerce is installed and active.\n");
 }
 
-// 2. Define our 4 Premium Signature Fragrances
+// 2. Programmatically Bypass and Skip WooCommerce Onboarding Wizard
+echo "Bypassing WooCommerce Onboarding Setup Wizard...\n";
+update_option('woocommerce_onboarding_profile', array(
+    'completed' => true,
+    'store_email' => get_option('admin_email'),
+    'country' => 'US:NY', // Default to United States, New York (exclusively US marketing)
+    'industry' => array('beauty'),
+    'product_types' => array('physical'),
+    'business_status' => 'just_started',
+    'selling_venues' => 'no',
+    'setup_client' => false
+));
+update_option('woocommerce_admin_onboarding_home_visit', 1);
+update_option('woocommerce_task_list_hidden', 'yes');
+update_option('woocommerce_admin_install_timestamp', time());
+
+// Configure US-only settings
+update_option('woocommerce_default_country', 'US:NY');
+update_option('woocommerce_currency', 'USD');
+update_option('woocommerce_allowed_countries', 'specific');
+update_option('woocommerce_specific_allowed_countries', array('US')); // Exclusively US customers
+update_option('woocommerce_ship_to_countries', 'specific');
+update_option('woocommerce_specific_ship_to_countries', array('US')); // Ship only to United States
+echo "WooCommerce configured successfully: Selling & shipping restricted strictly to the United States (USD).\n";
+
+// 3. Define our 4 Premium Signature Fragrances
 $premium_perfumes = array(
     array(
         'title' => 'Oud Midnight Layers',
@@ -66,7 +92,8 @@ $premium_perfumes = array(
     )
 );
 
-// 3. Seed Products into WooCommerce
+// 4. Seed Products into WooCommerce
+echo "Seeding Premium Fragrance Catalog...\n";
 foreach ($premium_perfumes as $perfume) {
     // Check if product already exists to avoid duplicates
     $existing_product = get_page_by_title($perfume['title'], OBJECT, 'product');
@@ -97,7 +124,7 @@ foreach ($premium_perfumes as $perfume) {
     }
 }
 
-echo "=============================================\n";
-echo "Premium Perfume Catalog Seeding Complete!\n";
-echo "=============================================\n";
+echo "=========================================================\n";
+echo "WooCommerce configured for USA & Catalog Seeding Complete!\n";
+echo "=========================================================\n";
 ?>
