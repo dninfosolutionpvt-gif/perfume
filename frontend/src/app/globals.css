@@ -1,11 +1,6 @@
-@import "tailwindcss";
-
-@theme {
-  --color-gold: #A88020;
-  --color-gold-dark: #876412;
-  --color-gold-light: #F7F3E9;
-  --color-bronze: #704E2D;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #FAF8F5;
@@ -13,6 +8,7 @@
   --gold: #A88020;
   --gold-dark: #876412;
   --gold-light: #F7F3E9;
+  --bronze: #704E2D;
 }
 
 ::-webkit-scrollbar { width: 6px; }

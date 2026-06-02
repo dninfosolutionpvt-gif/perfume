@@ -17,15 +17,10 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
-    "tailwindcss": "^4"
-  },
-  "optionalDependencies": {
-    "lightningcss-linux-x64-gnu": "*",
-    "lightningcss-linux-x64-musl": "*",
-    "lightningcss-linux-arm64-gnu": "*",
-    "lightningcss-linux-arm64-musl": "*"
+    "postcss": "^8.5.6",
+    "tailwindcss": "3.4.17"
   }
 }

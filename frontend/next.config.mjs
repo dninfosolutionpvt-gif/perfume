@@ -1,6 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {},
+  turbopack: {
+    rules: {
+      '*.css': {
+        loaders: [],
+      },
+    },
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },
