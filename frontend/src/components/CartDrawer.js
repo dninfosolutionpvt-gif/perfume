@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { X, Trash2, Plus, Minus, CreditCard, ShoppingBag, Truck, ArrowLeft, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE_URL } from '../config';
-
 export default function CartDrawer() {
   const {
     cart,
@@ -15,6 +13,8 @@ export default function CartDrawer() {
     removeFromCart,
     cartTotal,
     clearCart,
+    checkoutUrl,
+    goToCheckout,
   } = useCart();
 
   const [checkoutStep, setCheckoutStep] = useState('cart'); // 'cart', 'checkout', 'success'
@@ -402,7 +402,16 @@ export default function CartDrawer() {
                   </div>
                 </div>
 
-                {checkoutStep === 'cart' ? (
+                {checkoutUrl ? (
+                  /* Shopify Checkout — redirects to Shopify's hosted checkout */
+                  <button
+                    onClick={goToCheckout}
+                    className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center font-bold"
+                  >
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Checkout via Shopify
+                  </button>
+                ) : checkoutStep === 'cart' ? (
                   <button
                     onClick={() => setCheckoutStep('checkout')}
                     className="w-full py-3 bg-gold hover:bg-gold-dark text-black font-semibold uppercase tracking-wider text-xs font-sans rounded transition-all duration-300 cursor-pointer shadow-lg hover:shadow-gold/20 flex items-center justify-center font-bold"

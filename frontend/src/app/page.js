@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Compass, ArrowRight, ShieldCheck, Heart, Sparkles, ChevronRight, Star, ChevronDown } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
 import TrustBadges from '../components/TrustBadges';
-import { API_BASE_URL } from '../config';
+import { getProducts } from '../lib/shopify';
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -14,107 +14,15 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('top');
   const [openFaq, setOpenFaq] = useState(null);
 
-  // Fetch trending products on mount
+  // Fetch trending products from Shopify on mount
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/products`);
-        const data = await res.json();
-        setProducts(data.slice(0, 4)); // Get first 4 as trending
+        const data = await getProducts({ first: 4 });
+        setProducts(data);
       } catch (err) {
-        console.warn('Backend server not connected. Loading frontend fallback products.');
-        // Resilient client-side fallback
-        const fallback = [
-          {
-            id: 1,
-            name: 'Orova Purple Oud',
-            price: 3599.00,
-            gender: 'Unisex',
-            fragrance_type: 'Woody',
-            occasion: 'Date Night',
-            longevity: '12+ Hours',
-            mood: 'Bold',
-            description: 'A dark, hypnotic oriental masterpiece with rich agarwood (oud), warm amber, and leather.',
-            image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
-            image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Saffron', 'Pink Pepper', 'Nutmeg'],
-            heart_notes: ['Rich Oud', 'Warm Amber'],
-            base_notes: ['Precious Leather', 'Patchouli'],
-            sillage: 'Strong',
-            projection: 'Strong',
-            rating: 4.9,
-            reviews_count: 142,
-            stock: 8,
-            inspired_by: 'Orova Paris Purple Oud Formula'
-          },
-          {
-            id: 2,
-            name: 'Orova Amber Oud',
-            price: 3699.00,
-            gender: 'Unisex',
-            fragrance_type: 'Oriental',
-            occasion: 'Winter',
-            longevity: '12+ Hours',
-            mood: 'Bold',
-            description: 'An opulent, deeply warming blend of precious oud oil, rich golden amber, and soft exotic woods.',
-            image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
-            image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Warm Amber', 'Labdanum', 'Cinnamon'],
-            heart_notes: ['Cambodian Oud', 'Guaiac Wood'],
-            base_notes: ['Soft Vanilla', 'Sandalwood'],
-            sillage: 'Heavy',
-            projection: 'Strong',
-            rating: 4.9,
-            reviews_count: 98,
-            stock: 7,
-            inspired_by: 'Orova Paris Amber Oud Formula'
-          },
-          {
-            id: 3,
-            name: 'Orova Elixir',
-            price: 3499.00,
-            gender: 'Unisex',
-            fragrance_type: 'Floral',
-            occasion: 'Party',
-            longevity: '8+ Hours',
-            mood: 'Romantic',
-            description: 'An intoxicating, sweet gourmand unisex fragrance with wild strawberry and vanilla pod absolute.',
-            image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
-            image_side: 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Wild Strawberry', 'Sweet Berries', 'Bergamot'],
-            heart_notes: ['Vanilla Pod Absolute', 'Fresh Jasmine'],
-            base_notes: ['Cashmere Musk', 'Sandalwood'],
-            sillage: 'Moderate',
-            projection: 'Moderate',
-            rating: 4.8,
-            reviews_count: 86,
-            stock: 15,
-            inspired_by: 'Orova Paris Elixir Formula'
-          },
-          {
-            id: 4,
-            name: 'Orova Santal Woods',
-            price: 3299.00,
-            gender: 'Unisex',
-            fragrance_type: 'Woody',
-            occasion: 'Office',
-            longevity: 'All Day',
-            mood: 'Elegant',
-            description: 'Authoritative, creamy, and soothing. A pristine blend of creamy Indian sandalwood and exotic cardamom.',
-            image_front: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=600',
-            image_side: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=600',
-            top_notes: ['Cardamom', 'Papyrus', 'Violet Accord'],
-            heart_notes: ['Creamy Sandalwood', 'Virginia Cedar'],
-            base_notes: ['Soft Musk', 'Warm Woody Notes'],
-            sillage: 'Moderate',
-            projection: 'Strong',
-            rating: 4.9,
-            reviews_count: 114,
-            stock: 9,
-            inspired_by: 'Orova Paris Santal Woods Formula'
-          }
-        ];
-        setProducts(fallback);
+        console.error('Shopify fetch error:', err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }
