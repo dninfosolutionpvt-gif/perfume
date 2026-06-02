@@ -1,0 +1,6 @@
+{
+  "buildCommand": "TURBOPACK=0 next build",
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "outputDirectory": ".next"
+}
