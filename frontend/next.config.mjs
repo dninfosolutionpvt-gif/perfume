@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Force webpack bundler — disables Turbopack
-  // This is required for Tailwind CSS v3 compatibility on Vercel
-  webpack: (config) => {
-    return config;
-  },
+  turbopack: {},
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'cdn.shopify.com' },
