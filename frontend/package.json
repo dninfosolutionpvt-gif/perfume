@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "cross-env TURBOPACK=0 next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -17,9 +17,22 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.0",
+    "autoprefixer": "^10.4.21",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4"
+    "lightningcss": "^1.29.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^4.3.0"
+  },
+  "optionalDependencies": {
+    "lightningcss-darwin-arm64": "^1.29.0",
+    "lightningcss-darwin-x64": "^1.29.0",
+    "lightningcss-linux-arm64-gnu": "^1.32.0",
+    "lightningcss-linux-arm64-musl": "^1.32.0",
+    "lightningcss-linux-x64-gnu": "^1.32.0",
+    "lightningcss-linux-x64-musl": "^1.32.0",
+    "lightningcss-win32-x64-msvc": "^1.29.0"
   }
 }

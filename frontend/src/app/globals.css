@@ -1,95 +1,53 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FAF8F5; /* Premium Alabaster / Ivory */
-  --foreground: #1C1917; /* Warm Dark Charcoal */
-  --gold: #A88020; /* Refined luxury gold for high contrast on light backgrounds */
+  --background: #FAF8F5;
+  --foreground: #1C1917;
+  --gold: #A88020;
   --gold-dark: #876412;
-  --gold-light: #F7F3E9; /* Champagne Cream */
+  --gold-light: #F7F3E9;
   --bronze: #704E2D;
-  
-  --font-serif: var(--font-playfair);
-  --font-sans: var(--font-montserrat);
 }
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-gold: var(--gold);
-  --color-gold-dark: var(--gold-dark);
-  --color-gold-light: var(--gold-light);
-  --color-bronze: var(--bronze);
-  
-  --font-serif: var(--font-serif);
-  --font-sans: var(--font-sans);
+  --color-gold: #A88020;
+  --color-gold-dark: #876412;
+  --color-gold-light: #F7F3E9;
+  --color-bronze: #704E2D;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: #FAF8F5;
-}
-::-webkit-scrollbar-thumb {
-  background: #E8E2D9;
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gold);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #FAF8F5; }
+::-webkit-scrollbar-thumb { background: #E8E2D9; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
-/* Smooth Scrolling */
-html {
-  scroll-behavior: smooth;
-  background-color: #FAF8F5;
-}
+html { scroll-behavior: smooth; background-color: #FAF8F5; }
+body { background-color: var(--background); color: var(--foreground); overflow-x: hidden; }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  overflow-x: hidden;
-}
-
-/* Glassmorphism utility for light theme */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255,255,255,0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(168, 128, 32, 0.15);
+  border: 1px solid rgba(168,128,32,0.15);
 }
-
 .glass-intense {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255,255,255,0.9);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(168, 128, 32, 0.2);
+  border: 1px solid rgba(168,128,32,0.2);
 }
-
-/* Luxury Glow */
-.gold-glow {
-  box-shadow: 0 0 30px rgba(168, 128, 32, 0.08);
-}
-
-.gold-glow-hover:hover {
-  box-shadow: 0 0 40px rgba(168, 128, 32, 0.18);
-  transition: all 0.5s ease;
-}
-
-/* Text gold gradient */
+.gold-glow { box-shadow: 0 0 30px rgba(168,128,32,0.08); }
+.gold-glow-hover:hover { box-shadow: 0 0 40px rgba(168,128,32,0.18); transition: all 0.5s ease; }
 .text-gold-gradient {
   background: linear-gradient(135deg, #B59228 0%, #A88020 50%, #7A5B0B 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
-
-/* Golden border transition */
 .border-gold-transition {
-  border: 1px solid rgba(168, 128, 32, 0.15);
+  border: 1px solid rgba(168,128,32,0.15);
   transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
-
 .border-gold-transition:hover {
-  border-color: rgba(168, 128, 32, 0.5);
-  box-shadow: 0 0 15px rgba(168, 128, 32, 0.08);
+  border-color: rgba(168,128,32,0.5);
+  box-shadow: 0 0 15px rgba(168,128,32,0.08);
 }
