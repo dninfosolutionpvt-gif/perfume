@@ -9,6 +9,253 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
+
+const configPath = path.join(__dirname, 'config', 'shopify_config.json');
+
+function getShopifyConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const data = fs.readFileSync(configPath, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error('Error reading shopify config:', err.message);
+  }
+  return null;
+}
+
+function saveShopifyConfig(config) {
+  try {
+    const dir = path.dirname(configPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    return true;
+  } catch (err) {
+    console.error('Error saving shopify config:', err.message);
+    return false;
+  }
+}
+
+async function shopifyAdminRequest(config, endpoint, method = 'GET', body = null) {
+  const { storeDomain, adminAccessToken } = config;
+  const cleanDomain = storeDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+  const url = `https://${cleanDomain}/admin/api/2024-01/${endpoint}`;
+  
+  if (typeof fetch !== 'undefined') {
+    const headers = {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': adminAccessToken,
+    };
+    const options = {
+      method,
+      headers,
+    };
+    if (body && method !== 'GET') {
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Shopify API error (${response.status}): ${text}`);
+    }
+    return await response.json();
+  } else {
+    return new Promise((resolve, reject) => {
+      const options = {
+        hostname: cleanDomain,
+        path: `/admin/api/2024-01/${endpoint}`,
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shopify-Access-Token': adminAccessToken,
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let data = '';
+        res.on('data', (chunk) => { data += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(data));
+            } catch (e) {
+              reject(new Error(`Failed to parse response: ${e.message}`));
+            }
+          } else {
+            reject(new Error(`Shopify API error (${res.statusCode}): ${data}`));
+          }
+        });
+      });
+
+      req.on('error', (e) => reject(e));
+      if (body && method !== 'GET') {
+        req.write(JSON.stringify(body));
+      }
+      req.end();
+    });
+  }
+}
+
+function parseShopifyTags(tagsString) {
+  const result = {
+    gender: 'Unisex',
+    fragrance_type: 'Floral',
+    mood: 'Elegant',
+    occasion: 'Daily Wear',
+    longevity: '8+ Hours',
+    sillage: 'Moderate',
+    projection: 'Moderate',
+    inspired_by: 'Original Formula',
+    similar_to: 'Niche Perfume',
+    best_season: 'All-Season',
+    best_time: 'Day/Night',
+    top_notes: ['Citrus', 'Spices'],
+    heart_notes: ['Jasmine', 'Rose'],
+    base_notes: ['Sandalwood', 'Musk']
+  };
+
+  if (!tagsString) return result;
+  
+  const tags = tagsString.split(',').map(t => t.trim());
+
+  for (const tag of tags) {
+    const lower = tag.toLowerCase();
+    
+    if (lower === 'men' || lower === 'male') result.gender = 'Men';
+    else if (lower === 'women' || lower === 'female') result.gender = 'Women';
+    else if (lower === 'unisex') result.gender = 'Unisex';
+    
+    if (['woody', 'floral', 'citrus', 'oriental', 'aquatic', 'fresh', 'musky'].includes(lower)) {
+      result.fragrance_type = tag.charAt(0).toUpperCase() + tag.slice(1);
+    }
+    
+    if (['bold', 'romantic', 'fresh', 'elegant'].includes(lower)) {
+      result.mood = tag.charAt(0).toUpperCase() + tag.slice(1);
+    }
+
+    if (lower.startsWith('top:')) {
+      result.top_notes = tag.slice(4).split(';').map(n => n.trim());
+    }
+    if (lower.startsWith('heart:')) {
+      result.heart_notes = tag.slice(6).split(';').map(n => n.trim());
+    }
+    if (lower.startsWith('base:')) {
+      result.base_notes = tag.slice(5).split(';').map(n => n.trim());
+    }
+    if (lower.startsWith('inspired_by:')) {
+      result.inspired_by = tag.slice(12);
+    }
+    if (lower.startsWith('similar_to:')) {
+      result.similar_to = tag.slice(11);
+    }
+    if (lower.startsWith('longevity:')) {
+      result.longevity = tag.slice(10);
+    }
+    if (lower.startsWith('occasion:')) {
+      result.occasion = tag.slice(9);
+    }
+    if (lower.startsWith('season:')) {
+      result.best_season = tag.slice(7);
+    }
+    if (lower.startsWith('time:')) {
+      result.best_time = tag.slice(5);
+    }
+  }
+  
+  return result;
+}
+
+function mapShopifyProductToAppFormat(p) {
+  const price = p.variants && p.variants[0] ? parseFloat(p.variants[0].price) : 0;
+  const stock = p.variants && p.variants[0] ? parseInt(p.variants[0].inventory_quantity ?? 10, 10) : 10;
+  
+  const parsedTags = parseShopifyTags(p.tags);
+  
+  const images = p.images || [];
+  const image_front = images[0] ? images[0].src : 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600';
+  const image_side = images[1] ? images[1].src : image_front;
+  const image_lifestyle = images[2] ? images[2].src : image_front;
+  const image_spray = images[3] ? images[3].src : image_front;
+  const image_box = images[4] ? images[4].src : image_front;
+  
+  return {
+    id: p.id,
+    name: p.title,
+    price: price,
+    gender: parsedTags.gender,
+    fragrance_type: parsedTags.fragrance_type,
+    occasion: parsedTags.occasion,
+    longevity: parsedTags.longevity,
+    mood: parsedTags.mood,
+    description: p.body_html ? p.body_html.replace(/<\/?[^>]+(>|$)/g, "") : "",
+    image_front,
+    image_side,
+    image_lifestyle,
+    image_spray,
+    image_box,
+    top_notes: parsedTags.top_notes,
+    heart_notes: parsedTags.heart_notes,
+    base_notes: parsedTags.base_notes,
+    sillage: parsedTags.sillage,
+    projection: parsedTags.projection,
+    best_season: parsedTags.best_season,
+    best_time: parsedTags.best_time,
+    rating: 4.9,
+    reviews_count: 8,
+    stock: stock,
+    similar_to: parsedTags.similar_to,
+    inspired_by: parsedTags.inspired_by,
+    shopify_status: p.status || 'active'
+  };
+}
+
+function mapShopifyOrderToAppFormat(o) {
+  const customer_name = o.shipping_address 
+    ? `${o.shipping_address.first_name || ''} ${o.shipping_address.last_name || ''}`.trim()
+    : (o.customer ? `${o.customer.first_name || ''} ${o.customer.last_name || ''}`.trim() : 'Guest Customer');
+
+  let payment_status = 'Pending';
+  if (o.financial_status === 'paid') payment_status = 'Paid';
+  else if (o.financial_status === 'refunded') payment_status = 'Refunded';
+
+  let status = 'Placed';
+  if (o.fulfillment_status === 'fulfilled') status = 'Delivered';
+  else if (o.fulfillment_status === 'partial') status = 'Shipped';
+  else if (o.cancelled_at) status = 'Cancelled';
+
+  const items = (o.line_items || []).map(item => ({
+    id: item.product_id,
+    name: item.title,
+    quantity: item.quantity,
+    price: parseFloat(item.price),
+    image_front: 'https://images.unsplash.com/photo-1594035910387-fea47794251f?auto=format&fit=crop&q=80&w=600'
+  }));
+
+  return {
+    id: o.id,
+    shopify_order_number: o.name,
+    customer_name: customer_name || 'Anonymous Customer',
+    customer_email: o.email || 'no-email@shopify.com',
+    phone: o.phone || (o.shipping_address ? o.shipping_address.phone : '') || 'N/A',
+    address: o.shipping_address ? o.shipping_address.address1 : 'No Address',
+    city: o.shipping_address ? o.shipping_address.city : '',
+    state: o.shipping_address ? o.shipping_address.province : '',
+    pincode: o.shipping_address ? o.shipping_address.zip : '',
+    total_amount: parseFloat(o.total_price),
+    payment_method: o.gateway || 'Shopify Gateway',
+    payment_status,
+    status,
+    created_at: o.created_at,
+    items
+  };
+}
+
+
 // In-Memory Fallback Data (for robustness if PostgreSQL is not running)
 const mockProducts = [
   {
@@ -293,9 +540,95 @@ const mockOrders = [
   }
 ];
 
+// --- SHOPIFY CONNECT CONFIG ENDPOINTS ---
+
+// Get shopify credentials config status
+app.get('/api/shopify/config', (req, res) => {
+  const config = getShopifyConfig();
+  if (config) {
+    return res.json({
+      connected: true,
+      storeDomain: config.storeDomain,
+      storefrontAccessToken: config.storefrontAccessToken
+    });
+  }
+  return res.json({ connected: false });
+});
+
+// Save and verify shopify credentials
+app.post('/api/shopify/config', async (req, res) => {
+  const { storeDomain, storefrontAccessToken, adminAccessToken } = req.body;
+  if (!storeDomain || !storefrontAccessToken || !adminAccessToken) {
+    return res.status(400).json({ error: 'Missing Shopify configuration details' });
+  }
+
+  const testConfig = { storeDomain, storefrontAccessToken, adminAccessToken };
+  
+  try {
+    // Verify connection by fetching shop details from Admin API
+    const response = await shopifyAdminRequest(testConfig, 'shop.json');
+    if (response && response.shop) {
+      saveShopifyConfig(testConfig);
+      return res.json({
+        success: true,
+        message: 'Successfully connected to Shopify store!',
+        shopName: response.shop.name,
+        currency: response.shop.currency
+      });
+    }
+    return res.status(400).json({ error: 'Failed to verify Shopify connection: Invalid response' });
+  } catch (error) {
+    console.error('Shopify verification failed:', error.message);
+    return res.status(400).json({ error: `Connection failed: ${error.message}` });
+  }
+});
+
+// Disconnect shopify credentials
+app.post('/api/shopify/config/disconnect', (req, res) => {
+  try {
+    if (fs.existsSync(configPath)) {
+      fs.unlinkSync(configPath);
+    }
+    return res.json({ success: true, message: 'Shopify connection cleared.' });
+  } catch (err) {
+    return res.status(500).json({ error: `Failed to disconnect: ${err.message}` });
+  }
+});
+
 // 1. Get All Products (with filters)
 app.get('/api/products', async (req, res) => {
   const { search, gender, type, occasion, longevity, mood } = req.query;
+
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const data = await shopifyAdminRequest(shopifyConfig, 'products.json?limit=250');
+      let productsList = (data.products || []).map(mapShopifyProductToAppFormat);
+      
+      if (search) {
+        const q = search.toLowerCase();
+        productsList = productsList.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+      }
+      if (gender && gender !== 'All') {
+        productsList = productsList.filter(p => p.gender.toLowerCase() === gender.toLowerCase());
+      }
+      if (type && type !== 'All') {
+        productsList = productsList.filter(p => p.fragrance_type.toLowerCase() === type.toLowerCase());
+      }
+      if (occasion && occasion !== 'All') {
+        productsList = productsList.filter(p => p.occasion.toLowerCase() === occasion.toLowerCase());
+      }
+      if (longevity && longevity !== 'All') {
+        productsList = productsList.filter(p => p.longevity.toLowerCase() === longevity.toLowerCase());
+      }
+      if (mood && mood !== 'All') {
+        productsList = productsList.filter(p => p.mood.toLowerCase() === mood.toLowerCase());
+      }
+      return res.json(productsList);
+    } catch (err) {
+      console.warn('⚠️ Shopify products fetch failed, falling back to database/mock data. Error:', err.message);
+    }
+  }
 
   try {
     let sql = 'SELECT * FROM products WHERE 1=1';
@@ -364,8 +697,19 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// 2. Get Product By ID
 app.get('/api/products/:id', async (req, res) => {
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const data = await shopifyAdminRequest(shopifyConfig, `products/${req.params.id}.json`);
+      if (data && data.product) {
+        return res.json(mapShopifyProductToAppFormat(data.product));
+      }
+    } catch (err) {
+      console.warn('⚠️ Shopify product fetch failed, falling back to database/mock details. Error:', err.message);
+    }
+  }
+
   const id = parseInt(req.params.id, 10);
   try {
     const { rows } = await db.query('SELECT * FROM products WHERE id = $1', [id]);
@@ -586,8 +930,18 @@ app.post('/api/orders', async (req, res) => {
 
 // --- ADMIN API ENDPOINTS ---
 
-// Get all orders for admin panel
 app.get('/api/admin/orders', async (req, res) => {
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const data = await shopifyAdminRequest(shopifyConfig, 'orders.json?status=any&limit=100');
+      const ordersList = (data.orders || []).map(mapShopifyOrderToAppFormat);
+      return res.json(ordersList);
+    } catch (err) {
+      console.warn('⚠️ Shopify orders fetch failed, falling back to local. Error:', err.message);
+    }
+  }
+
   try {
     const { rows } = await db.query(`
       SELECT o.*, 
@@ -618,8 +972,33 @@ app.get('/api/admin/orders', async (req, res) => {
 
 // Update order status/payment
 app.put('/api/admin/orders/:id', async (req, res) => {
-  const orderId = parseInt(req.params.id, 10);
   const { status, payment_status } = req.body;
+
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const getOrder = await shopifyAdminRequest(shopifyConfig, `orders/${req.params.id}.json`);
+      let tags = getOrder.order.tags ? getOrder.order.tags.split(',').map(t => t.trim()) : [];
+      
+      tags = tags.filter(t => !t.startsWith('status:') && !t.startsWith('payment:'));
+      if (status) tags.push(`status:${status}`);
+      if (payment_status) tags.push(`payment:${payment_status}`);
+      
+      const updateData = {
+        order: {
+          id: getOrder.order.id,
+          tags: tags.join(', ')
+        }
+      };
+
+      const data = await shopifyAdminRequest(shopifyConfig, `orders/${req.params.id}.json`, 'PUT', updateData);
+      return res.json(mapShopifyOrderToAppFormat(data.order));
+    } catch (err) {
+      console.warn('⚠️ Shopify order update failed, falling back to local. Error:', err.message);
+    }
+  }
+
+  const orderId = parseInt(req.params.id, 10);
   try {
     const { rows } = await db.query(
       'UPDATE orders SET status = COALESCE($1, status), payment_status = COALESCE($2, payment_status) WHERE id = $3 RETURNING *',
@@ -639,6 +1018,38 @@ app.put('/api/admin/orders/:id', async (req, res) => {
 
 // Get admin stats dashboard overview
 app.get('/api/admin/stats', async (req, res) => {
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const ordersData = await shopifyAdminRequest(shopifyConfig, 'orders.json?status=any&limit=250');
+      const productsData = await shopifyAdminRequest(shopifyConfig, 'products.json?limit=250');
+      
+      const orders = ordersData.orders || [];
+      const totalOrders = orders.length;
+      
+      const totalRevenue = orders.reduce((sum, o) => {
+        let isPaid = o.financial_status === 'paid';
+        if (o.tags) {
+          const tags = o.tags.split(',').map(t => t.trim().toLowerCase());
+          if (tags.includes('payment:paid')) isPaid = true;
+        }
+        return isPaid ? sum + parseFloat(o.total_price || 0) : sum;
+      }, 0);
+      
+      const totalProducts = (productsData.products || []).length;
+      const totalReviews = 18;
+      
+      return res.json({
+        totalOrders,
+        totalRevenue,
+        totalProducts,
+        totalReviews
+      });
+    } catch (err) {
+      console.warn('⚠️ Shopify stats fetch failed, falling back to local. Error:', err.message);
+    }
+  }
+
   try {
     const totalOrdersRes = await db.query('SELECT COUNT(*) FROM orders');
     const revenueRes = await db.query('SELECT SUM(total_amount) FROM orders WHERE payment_status = $1', ['Paid']);
@@ -668,24 +1079,81 @@ app.get('/api/admin/stats', async (req, res) => {
 
 // Admin Add new product
 app.post('/api/admin/products', async (req, res) => {
-  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection } = req.body;
+  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection, stock, top_notes, heart_notes, base_notes, similar_to, best_season, best_time } = req.body;
   if (!name || !price || !gender || !fragrance_type || !occasion || !longevity || !mood || !description) {
     return res.status(400).json({ error: 'Missing required product fields' });
   }
 
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const tagsList = [
+        gender,
+        fragrance_type,
+        mood,
+        `longevity:${longevity}`,
+        `occasion:${occasion}`
+      ];
+      if (inspired_by) tagsList.push(`inspired_by:${inspired_by}`);
+      if (similar_to) tagsList.push(`similar_to:${similar_to}`);
+      if (sillage) tagsList.push(`sillage:${sillage}`);
+      if (projection) tagsList.push(`projection:${projection}`);
+      if (best_season) tagsList.push(`season:${best_season}`);
+      if (best_time) tagsList.push(`time:${best_time}`);
+      
+      const topNotesArr = Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(x=>x.trim()) : []);
+      const heartNotesArr = Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(x=>x.trim()) : []);
+      const baseNotesArr = Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(x=>x.trim()) : []);
+
+      if (topNotesArr.length > 0) tagsList.push(`top:${topNotesArr.join(';')}`);
+      if (heartNotesArr.length > 0) tagsList.push(`heart:${heartNotesArr.join(';')}`);
+      if (baseNotesArr.length > 0) tagsList.push(`base:${baseNotesArr.join(';')}`);
+
+      const shopifyProduct = {
+        product: {
+          title: name,
+          body_html: description,
+          vendor: 'Orova Paris',
+          product_type: 'Perfume',
+          status: 'active',
+          tags: tagsList.join(', '),
+          variants: [
+            {
+              price: String(price),
+              inventory_management: 'shopify',
+              inventory_quantity: stock !== undefined ? parseInt(stock, 10) : 10
+            }
+          ],
+          images: image_front ? [{ src: image_front }] : []
+        }
+      };
+
+      const data = await shopifyAdminRequest(shopifyConfig, 'products.json', 'POST', shopifyProduct);
+      return res.status(201).json(mapShopifyProductToAppFormat(data.product));
+    } catch (err) {
+      console.warn('⚠️ Shopify product creation failed, falling back to local. Error:', err.message);
+      return res.status(400).json({ error: `Shopify create failed: ${err.message}` });
+    }
+  }
+
   try {
+    const topNotesArr = Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(n => n.trim()) : ['Citrus', 'Spices']);
+    const heartNotesArr = Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(n => n.trim()) : ['Flora', 'Jasmine']);
+    const baseNotesArr = Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(n => n.trim()) : ['Musk', 'Amber']);
+
     const { rows } = await db.query(
       `INSERT INTO products (name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, image_side, image_lifestyle, image_spray, image_box, top_notes, heart_notes, base_notes, sillage, projection, best_season, best_time, rating, reviews_count, stock, similar_to, inspired_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $9, $9, $9, $10, $11, $12, $13, $14, $15, $16, 5.0, 0, 10, $17, $18) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9, $9, $9, $9, $10, $11, $12, $13, $14, $15, $16, 5.0, 0, $17, $18, $19) RETURNING *`,
       [
         name, parseFloat(price), gender, fragrance_type, occasion, longevity, mood, description,
         image_front || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
-        ['Citrus', 'Spices'], ['Flora', 'Jasmine'], ['Musk', 'Amber'], sillage || 'Moderate', projection || 'Moderate', 'All-Season', 'Day/Night', 'Niche Perfume', inspired_by || 'Original Formula'
+        topNotesArr, heartNotesArr, baseNotesArr, sillage || 'Moderate', projection || 'Moderate', best_season || 'All-Season', best_time || 'Day/Night',
+        parseInt(stock || 10, 10), similar_to || 'Niche Perfume', inspired_by || 'Original Formula'
       ]
     );
     return res.status(201).json(rows[0]);
   } catch (error) {
-    console.warn('⚠️ DB product creation failed, saving to in-memory fallback.');
+    console.warn('⚠️ DB product creation failed, saving to in-memory fallback. Error:', error.message);
     const newProduct = {
       id: mockProducts.length + 1,
       name,
@@ -701,17 +1169,17 @@ app.post('/api/admin/products', async (req, res) => {
       image_lifestyle: 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
       image_spray: 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
       image_box: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
-      top_notes: ['Saffron', 'Spices'],
-      heart_notes: ['Rose', 'Jasmine'],
-      base_notes: ['Amber', 'Musk'],
+      top_notes: Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(n => n.trim()) : ['Saffron', 'Spices']),
+      heart_notes: Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(n => n.trim()) : ['Rose', 'Jasmine']),
+      base_notes: Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(n => n.trim()) : ['Amber', 'Musk']),
       sillage: sillage || 'Moderate',
       projection: projection || 'Moderate',
-      best_season: 'All-Season',
-      best_time: 'Day/Night',
+      best_season: best_season || 'All-Season',
+      best_time: best_time || 'Day/Night',
       rating: 5.0,
       reviews_count: 0,
-      stock: 10,
-      similar_to: 'Niche Perfume',
+      stock: parseInt(stock || 10, 10),
+      similar_to: similar_to || 'Niche Perfume',
       inspired_by: inspired_by || 'Original Formula'
     };
     mockProducts.push(newProduct);
@@ -721,27 +1189,102 @@ app.post('/api/admin/products', async (req, res) => {
 
 // Admin Edit existing product
 app.put('/api/admin/products/:id', async (req, res) => {
-  const productId = parseInt(req.params.id, 10);
-  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection, stock } = req.body;
+  const { name, price, gender, fragrance_type, occasion, longevity, mood, description, image_front, inspired_by, sillage, projection, stock, top_notes, heart_notes, base_notes, similar_to, best_season, best_time } = req.body;
   if (!name || !price || !gender || !fragrance_type || !occasion || !longevity || !mood || !description) {
     return res.status(400).json({ error: 'Missing required product fields' });
   }
 
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      const productId = req.params.id;
+      const existingProduct = await shopifyAdminRequest(shopifyConfig, `products/${productId}.json`);
+      const existingImages = existingProduct.product.images || [];
+
+      const tagsList = [
+        gender,
+        fragrance_type,
+        mood,
+        `longevity:${longevity}`,
+        `occasion:${occasion}`
+      ];
+      if (inspired_by) tagsList.push(`inspired_by:${inspired_by}`);
+      if (similar_to) tagsList.push(`similar_to:${similar_to}`);
+      if (sillage) tagsList.push(`sillage:${sillage}`);
+      if (projection) tagsList.push(`projection:${projection}`);
+      if (best_season) tagsList.push(`season:${best_season}`);
+      if (best_time) tagsList.push(`time:${best_time}`);
+      
+      const topNotesArr = Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(x=>x.trim()) : []);
+      const heartNotesArr = Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(x=>x.trim()) : []);
+      const baseNotesArr = Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(x=>x.trim()) : []);
+
+      if (topNotesArr.length > 0) tagsList.push(`top:${topNotesArr.join(';')}`);
+      if (heartNotesArr.length > 0) tagsList.push(`heart:${heartNotesArr.join(';')}`);
+      if (baseNotesArr.length > 0) tagsList.push(`base:${baseNotesArr.join(';')}`);
+
+      const images = [];
+      if (image_front) {
+        const exists = existingImages.some(img => img.src === image_front);
+        if (!exists) {
+          images.push({ src: image_front });
+        }
+      }
+      existingImages.forEach(img => {
+        if (img.src !== image_front) {
+          images.push({ id: img.id });
+        }
+      });
+
+      const updateData = {
+        product: {
+          id: parseInt(productId, 10),
+          title: name,
+          body_html: description,
+          tags: tagsList.join(', '),
+          variants: [
+            {
+              id: existingProduct.product.variants[0].id,
+              price: String(price),
+              inventory_quantity: stock !== undefined ? parseInt(stock, 10) : undefined
+            }
+          ]
+        }
+      };
+
+      if (images.length > 0) {
+        updateData.product.images = images;
+      }
+
+      const data = await shopifyAdminRequest(shopifyConfig, `products/${productId}.json`, 'PUT', updateData);
+      return res.json(mapShopifyProductToAppFormat(data.product));
+    } catch (err) {
+      console.warn('⚠️ Shopify product update failed, falling back to local. Error:', err.message);
+      return res.status(400).json({ error: `Shopify update failed: ${err.message}` });
+    }
+  }
+
+  const productId = parseInt(req.params.id, 10);
   try {
+    const topNotesArr = Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(n => n.trim()) : ['Citrus', 'Spices']);
+    const heartNotesArr = Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(n => n.trim()) : ['Flora', 'Jasmine']);
+    const baseNotesArr = Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(n => n.trim()) : ['Musk', 'Amber']);
+
     const { rows } = await db.query(
       `UPDATE products 
-       SET name = $1, price = $2, gender = $3, fragrance_type = $4, occasion = $5, longevity = $6, mood = $7, description = $8, image_front = $9, inspired_by = $10, sillage = $11, projection = $12, stock = COALESCE($13, stock)
-       WHERE id = $14 RETURNING *`,
+       SET name = $1, price = $2, gender = $3, fragrance_type = $4, occasion = $5, longevity = $6, mood = $7, description = $8, image_front = $9, inspired_by = $10, sillage = $11, projection = $12, stock = COALESCE($13, stock), top_notes = $14, heart_notes = $15, base_notes = $16, similar_to = $17, best_season = $18, best_time = $19
+       WHERE id = $20 RETURNING *`,
       [
         name, parseFloat(price), gender, fragrance_type, occasion, longevity, mood, description,
-        image_front, inspired_by, sillage || 'Moderate', projection || 'Moderate', stock !== undefined ? parseInt(stock, 10) : null, productId
+        image_front, inspired_by, sillage || 'Moderate', projection || 'Moderate', stock !== undefined ? parseInt(stock, 10) : null,
+        topNotesArr, heartNotesArr, baseNotesArr, similar_to || 'Niche Perfume', best_season || 'All-Season', best_time || 'Day/Night', productId
       ]
     );
 
     if (rows.length === 0) return res.status(404).json({ error: 'Product not found' });
     return res.json(rows[0]);
   } catch (error) {
-    console.warn('⚠️ DB product update failed, updating in-memory fallback.');
+    console.warn('⚠️ DB product update failed, updating in-memory fallback. Error:', error.message);
     const product = mockProducts.find(p => p.id === productId);
     if (!product) return res.status(404).json({ error: 'Product not found' });
 
@@ -763,6 +1306,12 @@ app.put('/api/admin/products/:id', async (req, res) => {
     if (stock !== undefined) {
       product.stock = parseInt(stock, 10);
     }
+    product.top_notes = Array.isArray(top_notes) ? top_notes : (top_notes ? top_notes.split(',').map(n => n.trim()) : product.top_notes);
+    product.heart_notes = Array.isArray(heart_notes) ? heart_notes : (heart_notes ? heart_notes.split(',').map(n => n.trim()) : product.heart_notes);
+    product.base_notes = Array.isArray(base_notes) ? base_notes : (base_notes ? base_notes.split(',').map(n => n.trim()) : product.base_notes);
+    product.similar_to = similar_to || product.similar_to || 'Niche Perfume';
+    product.best_season = best_season || product.best_season || 'All-Season';
+    product.best_time = best_time || product.best_time || 'Day/Night';
 
     return res.json(product);
   }
@@ -770,6 +1319,17 @@ app.put('/api/admin/products/:id', async (req, res) => {
 
 // Admin Delete product
 app.delete('/api/admin/products/:id', async (req, res) => {
+  const shopifyConfig = getShopifyConfig();
+  if (shopifyConfig) {
+    try {
+      await shopifyAdminRequest(shopifyConfig, `products/${req.params.id}.json`, 'DELETE');
+      return res.json({ success: true, message: 'Product deleted from Shopify successfully' });
+    } catch (err) {
+      console.warn('⚠️ Shopify product delete failed, falling back to local. Error:', err.message);
+      return res.status(400).json({ error: `Shopify delete failed: ${err.message}` });
+    }
+  }
+
   const productId = parseInt(req.params.id, 10);
   try {
     const { rowCount } = await db.query('DELETE FROM products WHERE id = $1', [productId]);
