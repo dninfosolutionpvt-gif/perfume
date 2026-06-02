@@ -12,7 +12,7 @@ import {
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
-  // Local cart state (mirrors Shopify cart)
+  // Local cart state (mirrors Shopify cart lines)
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
@@ -30,15 +30,13 @@ export function CartProvider({ children }) {
       const storedWishlist = localStorage.getItem('orova_paris_wishlist');
       const storedCartId = localStorage.getItem('orova_shopify_cart_id');
       const storedCheckoutUrl = localStorage.getItem('orova_shopify_checkout_url');
-      const storedLocalCart = localStorage.getItem('orova_paris_cart');
 
       if (storedWishlist) setWishlist(JSON.parse(storedWishlist));
-      if (storedLocalCart) setCart(JSON.parse(storedLocalCart));
 
       if (storedCartId) {
         setShopifyCartId(storedCartId);
         if (storedCheckoutUrl) setCheckoutUrl(storedCheckoutUrl);
-        // Sync cart from Shopify
+        // Restore cart from Shopify
         getCart(storedCartId)
           .then(shopifyCart => {
             if (shopifyCart) {
@@ -62,17 +60,17 @@ export function CartProvider({ children }) {
   const syncLocalCartFromShopify = (shopifyCart) => {
     if (!shopifyCart?.lines?.edges) return;
     const lines = shopifyCart.lines.edges.map(e => ({
-      id: e.node.merchandise?.product?.title || 'Unknown',
+      id: e.node.merchandise?.product?.handle || e.node.merchandise?.id || 'unknown',
       lineId: e.node.id,
       variantId: e.node.merchandise?.id,
       name: e.node.merchandise?.product?.title || 'Unknown',
       price: parseFloat(e.node.merchandise?.price?.amount || 0),
       quantity: e.node.quantity,
       image_front: e.node.merchandise?.product?.images?.edges?.[0]?.node?.url || '',
+      handle: e.node.merchandise?.product?.handle || '',
+      inspired_by: '',
     }));
     setCart(lines);
-    // Save to localStorage as backup
-    localStorage.setItem('orova_paris_cart', JSON.stringify(lines));
   };
 
   // ─── Save wishlist to localStorage ───────────────────────────────
@@ -86,50 +84,36 @@ export function CartProvider({ children }) {
   }, [wishlist, isLoaded]);
 
   // ─── Add to Cart ──────────────────────────────────────────────────
-  const addToCart = useCallback(async (product, quantity = 1) => {
+  const addToCart = useCallback(async (product, quantity = 1, variantId = null) => {
     setCartLoading(true);
     try {
-      const variantId = product.variantId;
+      // Use provided variantId, or fall back to product's first variant
+      const resolvedVariantId = variantId || product.variantId;
 
-      if (variantId) {
-        // Shopify cart flow
-        if (shopifyCartId) {
-          // Add to existing Shopify cart
-          const updatedCart = await shopifyAddToCart(shopifyCartId, variantId, quantity);
-          setCheckoutUrl(updatedCart.checkoutUrl);
-          localStorage.setItem('orova_shopify_checkout_url', updatedCart.checkoutUrl);
-          syncLocalCartFromShopify(updatedCart);
-        } else {
-          // Create new Shopify cart
-          const newCart = await createCart([{ variantId, quantity }]);
-          setShopifyCartId(newCart.id);
-          setCheckoutUrl(newCart.checkoutUrl);
-          localStorage.setItem('orova_shopify_cart_id', newCart.id);
-          localStorage.setItem('orova_shopify_checkout_url', newCart.checkoutUrl);
-          syncLocalCartFromShopify(newCart);
-        }
+      if (!resolvedVariantId) {
+        console.warn('No variantId available for product:', product.name);
+        setCartLoading(false);
+        setCartOpen(true);
+        return;
+      }
+
+      if (shopifyCartId) {
+        // Add to existing Shopify cart
+        const updatedCart = await shopifyAddToCart(shopifyCartId, resolvedVariantId, quantity);
+        setCheckoutUrl(updatedCart.checkoutUrl);
+        localStorage.setItem('orova_shopify_checkout_url', updatedCart.checkoutUrl);
+        syncLocalCartFromShopify(updatedCart);
       } else {
-        // Fallback: local cart (no Shopify variantId available)
-        setCart(prev => {
-          const existing = prev.find(item => item.id === product.id);
-          const updated = existing
-            ? prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item)
-            : [...prev, { ...product, quantity }];
-          localStorage.setItem('orova_paris_cart', JSON.stringify(updated));
-          return updated;
-        });
+        // Create new Shopify cart
+        const newCart = await createCart([{ variantId: resolvedVariantId, quantity }]);
+        setShopifyCartId(newCart.id);
+        setCheckoutUrl(newCart.checkoutUrl);
+        localStorage.setItem('orova_shopify_cart_id', newCart.id);
+        localStorage.setItem('orova_shopify_checkout_url', newCart.checkoutUrl);
+        syncLocalCartFromShopify(newCart);
       }
     } catch (err) {
-      console.error('Shopify cart error, using local fallback:', err);
-      // Local fallback
-      setCart(prev => {
-        const existing = prev.find(item => item.id === product.id);
-        const updated = existing
-          ? prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item)
-          : [...prev, { ...product, quantity }];
-        localStorage.setItem('orova_paris_cart', JSON.stringify(updated));
-        return updated;
-      });
+      console.error('Shopify cart error:', err);
     } finally {
       setCartLoading(false);
       setCartOpen(true);
@@ -143,17 +127,13 @@ export function CartProvider({ children }) {
       try {
         const updatedCart = await shopifyRemoveFromCart(shopifyCartId, item.lineId);
         syncLocalCartFromShopify(updatedCart);
-        return;
       } catch (err) {
         console.error('Shopify remove error:', err);
+        setCart(prev => prev.filter(i => i.id !== productId && i.id !== String(productId)));
       }
+    } else {
+      setCart(prev => prev.filter(i => i.id !== productId && i.id !== String(productId)));
     }
-    // Local fallback
-    setCart(prev => {
-      const updated = prev.filter(i => i.id !== productId && i.id !== String(productId));
-      localStorage.setItem('orova_paris_cart', JSON.stringify(updated));
-      return updated;
-    });
   }, [cart, shopifyCartId]);
 
   // ─── Update Quantity ──────────────────────────────────────────────
@@ -168,17 +148,17 @@ export function CartProvider({ children }) {
       try {
         const updatedCart = await updateCartLine(shopifyCartId, item.lineId, newQty);
         syncLocalCartFromShopify(updatedCart);
-        return;
       } catch (err) {
         console.error('Shopify update error:', err);
+        setCart(prev =>
+          prev.map(i => (i.id === productId || i.id === String(productId)) ? { ...i, quantity: newQty } : i)
+        );
       }
+    } else {
+      setCart(prev =>
+        prev.map(i => (i.id === productId || i.id === String(productId)) ? { ...i, quantity: newQty } : i)
+      );
     }
-    // Local fallback
-    setCart(prev => {
-      const updated = prev.map(i => (i.id === productId || i.id === String(productId)) ? { ...i, quantity: newQty } : i);
-      localStorage.setItem('orova_paris_cart', JSON.stringify(updated));
-      return updated;
-    });
   }, [cart, shopifyCartId, removeFromCart]);
 
   // ─── Clear Cart ───────────────────────────────────────────────────
@@ -186,18 +166,16 @@ export function CartProvider({ children }) {
     setCart([]);
     setShopifyCartId(null);
     setCheckoutUrl(null);
-    localStorage.removeItem('orova_paris_cart');
     localStorage.removeItem('orova_shopify_cart_id');
     localStorage.removeItem('orova_shopify_checkout_url');
   }, []);
 
   // ─── Checkout ─────────────────────────────────────────────────────
-  // Redirects to Shopify's hosted checkout page
   const goToCheckout = useCallback(() => {
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     } else {
-      console.warn('No checkout URL available');
+      console.warn('No Shopify checkout URL available');
     }
   }, [checkoutUrl]);
 
@@ -209,7 +187,8 @@ export function CartProvider({ children }) {
     });
   };
 
-  const isInWishlist = (productId) => wishlist.some(item => item.id === productId || item.id === String(productId));
+  const isInWishlist = (productId) =>
+    wishlist.some(item => item.id === productId || item.id === String(productId));
 
   // ─── Computed values ──────────────────────────────────────────────
   const cartTotal = cart.reduce((total, item) => total + item.price * item.quantity, 0);

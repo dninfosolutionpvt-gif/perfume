@@ -31,7 +31,7 @@ async function shopifyFetch(query, variables = {}) {
   return json.data;
 }
 
-// ─── Product Fragments ──────────────────────────────────────────────
+// ─── Product Fragment ─────────────────────────────────────────────────
 
 const PRODUCT_FRAGMENT = `
   fragment ProductFields on Product {
@@ -39,13 +39,22 @@ const PRODUCT_FRAGMENT = `
     handle
     title
     description
+    vendor
+    productType
+    tags
     priceRange {
       minVariantPrice {
         amount
         currencyCode
       }
     }
-    images(first: 5) {
+    compareAtPriceRange {
+      minVariantCompareAtPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 10) {
       edges {
         node {
           url
@@ -53,16 +62,38 @@ const PRODUCT_FRAGMENT = `
         }
       }
     }
-    variants(first: 10) {
+    options {
+      id
+      name
+      values
+    }
+    variants(first: 50) {
       edges {
         node {
           id
           title
+          availableForSale
+          quantityAvailable
           price {
             amount
             currencyCode
           }
-          quantityAvailable
+          compareAtPrice {
+            amount
+            currencyCode
+          }
+          selectedOptions {
+            name
+            value
+          }
+        }
+      }
+    }
+    collections(first: 10) {
+      edges {
+        node {
+          handle
+          title
         }
       }
     }
@@ -86,7 +117,6 @@ const PRODUCT_FRAGMENT = `
       key
       value
     }
-    tags
   }
 `;
 
@@ -94,9 +124,25 @@ const PRODUCT_FRAGMENT = `
 
 export function transformProduct(shopifyProduct) {
   const images = shopifyProduct.images.edges.map(e => e.node.url);
-  const variant = shopifyProduct.variants.edges[0]?.node;
-  const price = parseFloat(variant?.price?.amount || shopifyProduct.priceRange.minVariantPrice.amount);
-  const stock = variant?.quantityAvailable ?? 10;
+
+  // All variants with full detail
+  const variants = shopifyProduct.variants.edges.map(e => ({
+    id: e.node.id,
+    title: e.node.title,
+    price: parseFloat(e.node.price?.amount || 0),
+    compareAtPrice: e.node.compareAtPrice ? parseFloat(e.node.compareAtPrice.amount) : null,
+    quantityAvailable: e.node.quantityAvailable ?? 0,
+    availableForSale: e.node.availableForSale,
+    selectedOptions: e.node.selectedOptions || [],
+  }));
+
+  const firstVariant = variants[0];
+  const price = firstVariant?.price ?? parseFloat(shopifyProduct.priceRange.minVariantPrice.amount);
+  const compareAtPrice = firstVariant?.compareAtPrice ?? null;
+  const stock = firstVariant?.quantityAvailable ?? 10;
+
+  // Collections as array of titles
+  const collections = (shopifyProduct.collections?.edges || []).map(e => e.node.title);
 
   // Extract metafields into a map
   const meta = {};
@@ -116,17 +162,25 @@ export function transformProduct(shopifyProduct) {
   return {
     id: numericId,
     shopifyId: shopifyProduct.id,
-    variantId: variant?.id,
+    variantId: firstVariant?.id,
     handle: shopifyProduct.handle,
     name: shopifyProduct.title,
     description: shopifyProduct.description,
-    price: price,
-    stock: stock,
+    price,
+    compareAtPrice,
+    stock,
+    vendor: shopifyProduct.vendor || '',
+    productType: shopifyProduct.productType || '',
+    tags: shopifyProduct.tags || [],
+    collections,
+    options: shopifyProduct.options || [],
+    variants,
     image_front: images[0] || 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600',
     image_side: images[1] || images[0] || 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600',
     image_lifestyle: images[2] || images[0] || 'https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=600',
     image_spray: images[3] || images[0] || 'https://images.unsplash.com/photo-1588405748373-122b2321bc31?auto=format&fit=crop&q=80&w=600',
     image_box: images[4] || images[0] || 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600',
+    allImages: images,
     gender: meta.gender || 'Unisex',
     fragrance_type: meta.fragrance_type || shopifyProduct.tags?.find(t => ['Woody','Floral','Oriental','Aquatic','Fresh','Citrus','Musky'].includes(t)) || 'Floral',
     occasion: meta.occasion || 'All Occasions',
@@ -148,8 +202,8 @@ export function transformProduct(shopifyProduct) {
 
 // ─── API Functions ────────────────────────────────────────────────────
 
-// Get all products (with optional filters)
-export async function getProducts({ first = 20, query = '' } = {}) {
+// Get all products (with optional limit/query)
+export async function getProducts({ first = 50, query = '' } = {}) {
   const data = await shopifyFetch(`
     ${PRODUCT_FRAGMENT}
     query GetProducts($first: Int!, $query: String) {
@@ -166,21 +220,74 @@ export async function getProducts({ first = 20, query = '' } = {}) {
   return data.products.edges.map(e => transformProduct(e.node));
 }
 
-// Get single product by handle or numeric ID
-export async function getProduct(idOrHandle) {
-  // Try by handle first
-  try {
-    const data = await shopifyFetch(`
-      ${PRODUCT_FRAGMENT}
-      query GetProductByHandle($handle: String!) {
-        product(handle: $handle) {
-          ...ProductFields
+// Get all collections from Shopify
+export async function getCollections({ first = 50 } = {}) {
+  const data = await shopifyFetch(`
+    query GetCollections($first: Int!) {
+      collections(first: $first) {
+        edges {
+          node {
+            id
+            handle
+            title
+            description
+            image {
+              url
+              altText
+            }
+          }
         }
       }
-    `, { handle: String(idOrHandle) });
+    }
+  `, { first });
 
-    if (data.product) return transformProduct(data.product);
-  } catch (_) {}
+  return data.collections.edges.map(e => e.node);
+}
+
+// Get products within a specific collection by handle
+export async function getProductsByCollection(collectionHandle, { first = 50 } = {}) {
+  const data = await shopifyFetch(`
+    ${PRODUCT_FRAGMENT}
+    query GetProductsByCollection($handle: String!, $first: Int!) {
+      collection(handle: $handle) {
+        id
+        handle
+        title
+        products(first: $first) {
+          edges {
+            node {
+              ...ProductFields
+            }
+          }
+        }
+      }
+    }
+  `, { handle: collectionHandle, first });
+
+  if (!data.collection) return [];
+  return data.collection.products.edges.map(e => transformProduct(e.node));
+}
+
+// Get single product by handle (preferred) or numeric ID fallback
+export async function getProductByHandle(handle) {
+  const data = await shopifyFetch(`
+    ${PRODUCT_FRAGMENT}
+    query GetProductByHandle($handle: String!) {
+      product(handle: $handle) {
+        ...ProductFields
+      }
+    }
+  `, { handle: String(handle) });
+
+  if (data.product) return transformProduct(data.product);
+  return null;
+}
+
+// Get single product by handle or numeric ID (backwards compatible)
+export async function getProduct(idOrHandle) {
+  // Try by handle first
+  const byHandle = await getProductByHandle(String(idOrHandle));
+  if (byHandle) return byHandle;
 
   // Fallback: fetch all and find by numeric ID
   const all = await getProducts({ first: 50 });
@@ -189,34 +296,45 @@ export async function getProduct(idOrHandle) {
 
 // ─── Cart API ─────────────────────────────────────────────────────────
 
-// Create a new cart
-export async function createCart(lines = []) {
-  const data = await shopifyFetch(`
-    mutation cartCreate($input: CartInput!) {
-      cartCreate(input: $input) {
-        cart {
+const CART_FRAGMENT = `
+  fragment CartFields on Cart {
+    id
+    checkoutUrl
+    lines(first: 30) {
+      edges {
+        node {
           id
-          checkoutUrl
-          lines(first: 10) {
-            edges {
-              node {
-                id
-                quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id
-                    title
-                    price { amount }
-                    product { title images(first: 1) { edges { node { url } } } }
-                  }
-                }
+          quantity
+          merchandise {
+            ... on ProductVariant {
+              id
+              title
+              price { amount currencyCode }
+              compareAtPrice { amount currencyCode }
+              product {
+                title
+                handle
+                images(first: 1) { edges { node { url } } }
               }
             }
           }
-          cost {
-            totalAmount { amount currencyCode }
-          }
         }
+      }
+    }
+    cost {
+      totalAmount { amount currencyCode }
+      subtotalAmount { amount currencyCode }
+    }
+  }
+`;
+
+// Create a new cart
+export async function createCart(lines = []) {
+  const data = await shopifyFetch(`
+    ${CART_FRAGMENT}
+    mutation cartCreate($input: CartInput!) {
+      cartCreate(input: $input) {
+        cart { ...CartFields }
         userErrors { field message }
       }
     }
@@ -232,31 +350,10 @@ export async function createCart(lines = []) {
 // Add item to existing cart
 export async function addToCart(cartId, variantId, quantity = 1) {
   const data = await shopifyFetch(`
+    ${CART_FRAGMENT}
     mutation cartLinesAdd($cartId: ID!, $lines: [CartLineInput!]!) {
       cartLinesAdd(cartId: $cartId, lines: $lines) {
-        cart {
-          id
-          checkoutUrl
-          lines(first: 20) {
-            edges {
-              node {
-                id
-                quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id
-                    title
-                    price { amount }
-                    product { title images(first: 1) { edges { node { url } } } }
-                  }
-                }
-              }
-            }
-          }
-          cost {
-            totalAmount { amount currencyCode }
-          }
-        }
+        cart { ...CartFields }
         userErrors { field message }
       }
     }
@@ -268,31 +365,10 @@ export async function addToCart(cartId, variantId, quantity = 1) {
 // Remove item from cart
 export async function removeFromCart(cartId, lineId) {
   const data = await shopifyFetch(`
+    ${CART_FRAGMENT}
     mutation cartLinesRemove($cartId: ID!, $lineIds: [ID!]!) {
       cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
-        cart {
-          id
-          checkoutUrl
-          lines(first: 20) {
-            edges {
-              node {
-                id
-                quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id
-                    title
-                    price { amount }
-                    product { title images(first: 1) { edges { node { url } } } }
-                  }
-                }
-              }
-            }
-          }
-          cost {
-            totalAmount { amount currencyCode }
-          }
-        }
+        cart { ...CartFields }
         userErrors { field message }
       }
     }
@@ -304,31 +380,10 @@ export async function removeFromCart(cartId, lineId) {
 // Update item quantity in cart
 export async function updateCartLine(cartId, lineId, quantity) {
   const data = await shopifyFetch(`
+    ${CART_FRAGMENT}
     mutation cartLinesUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!) {
       cartLinesUpdate(cartId: $cartId, lines: $lines) {
-        cart {
-          id
-          checkoutUrl
-          lines(first: 20) {
-            edges {
-              node {
-                id
-                quantity
-                merchandise {
-                  ... on ProductVariant {
-                    id
-                    title
-                    price { amount }
-                    product { title images(first: 1) { edges { node { url } } } }
-                  }
-                }
-              }
-            }
-          }
-          cost {
-            totalAmount { amount currencyCode }
-          }
-        }
+        cart { ...CartFields }
         userErrors { field message }
       }
     }
@@ -340,29 +395,10 @@ export async function updateCartLine(cartId, lineId, quantity) {
 // Get existing cart by ID
 export async function getCart(cartId) {
   const data = await shopifyFetch(`
+    ${CART_FRAGMENT}
     query getCart($cartId: ID!) {
       cart(id: $cartId) {
-        id
-        checkoutUrl
-        lines(first: 20) {
-          edges {
-            node {
-              id
-              quantity
-              merchandise {
-                ... on ProductVariant {
-                  id
-                  title
-                  price { amount }
-                  product { title images(first: 1) { edges { node { url } } } }
-                }
-              }
-            }
-          }
-        }
-        cost {
-          totalAmount { amount currencyCode }
-        }
+        ...CartFields
       }
     }
   `, { cartId });

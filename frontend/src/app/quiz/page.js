@@ -500,7 +500,7 @@ export default function ScentQuiz() {
                     <span className="text-sm font-sans font-bold text-gold">₹{product.price.toLocaleString()}</span>
                     <div className="flex items-center space-x-2">
                       <Link
-                        href={`/product/${product.id}`}
+                        href={`/product/${product.handle || product.id}`}
                         className="text-[10px] uppercase font-bold text-zinc-500 hover:text-gold tracking-wider font-sans py-1.5 transition-colors"
                       >
                         Details

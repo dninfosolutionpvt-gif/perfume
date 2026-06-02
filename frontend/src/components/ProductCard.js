@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useCart } from '../context/CartContext';
-import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
@@ -10,17 +10,22 @@ export default function ProductCard({ product }) {
   const { addToCart, toggleWishlist, isInWishlist } = useCart();
   const wishlisted = isInWishlist(product.id);
 
-  // Fallback images in case local assets are not present
+  // Use Shopify CDN image if available, fallback to Unsplash
   const defaultFront = 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=600';
   const defaultSide = 'https://images.unsplash.com/photo-1547887537-6158d64c35b3?auto=format&fit=crop&q=80&w=600';
 
-  const imageFront = product.image_front.startsWith('/') && !product.image_front.includes('/images/')
-    ? product.image_front 
-    : (product.id === 2 || product.id === 4 || product.id === 6 ? defaultSide : defaultFront);
-    
-  const imageSide = product.image_side.startsWith('/') && !product.image_side.includes('/images/')
-    ? product.image_side 
-    : (product.id === 2 || product.id === 4 || product.id === 6 ? defaultFront : defaultSide);
+  const imageFront = product.image_front || defaultFront;
+  const imageSide = product.image_side || defaultSide;
+
+  // Sale badge: show if compareAtPrice exists and is greater than price
+  const hasSale = product.compareAtPrice && product.compareAtPrice > product.price;
+  const discountPercent = hasSale
+    ? Math.round((1 - product.price / product.compareAtPrice) * 100)
+    : 0;
+
+  // Variant count badge
+  const variantCount = product.variants?.length || 1;
+  const hasMultipleVariants = variantCount > 1;
 
   return (
     <motion.div
@@ -30,7 +35,7 @@ export default function ProductCard({ product }) {
       transition={{ duration: 0.4 }}
       className="group relative flex flex-col bg-white border border-gold-transition rounded-md overflow-hidden shadow-sm"
     >
-      
+
       {/* Wishlist Button Overlay */}
       <button
         onClick={(e) => {
@@ -44,16 +49,31 @@ export default function ProductCard({ product }) {
         <Heart className={`w-4 h-4 transition-transform duration-300 active:scale-125 ${wishlisted ? 'text-gold fill-gold' : ''}`} />
       </button>
 
-      {/* Scarcity / Low Stock Indicator */}
-      {product.stock <= 8 && (
+      {/* Sale badge */}
+      {hasSale && (
+        <span className="absolute left-3 top-3 z-10 px-2 py-0.5 bg-red-600 text-white font-sans text-[10px] uppercase font-bold tracking-wider rounded shadow-sm">
+          -{discountPercent}%
+        </span>
+      )}
+
+      {/* Low stock badge (only if no sale badge) */}
+      {!hasSale && product.stock <= 8 && product.stock > 0 && (
         <span className="absolute left-3 top-3 z-10 px-2 py-0.5 bg-red-50 border border-red-200 text-red-600 font-sans text-[10px] uppercase font-bold tracking-wider rounded shadow-sm">
           Only {product.stock} Left
         </span>
       )}
 
+      {/* Multiple variants badge */}
+      {hasMultipleVariants && (
+        <span className="absolute left-3 bottom-3 z-10 px-2 py-0.5 bg-gold/10 border border-gold/30 text-gold font-sans text-[10px] uppercase font-bold tracking-wider rounded shadow-sm flex items-center gap-1">
+          <Tag className="w-2.5 h-2.5" />
+          {variantCount} Options
+        </span>
+      )}
+
       {/* Image Area with Double Image Hover Transition */}
-      <Link href={`/product/${product.id}`} className="block relative aspect-square overflow-hidden bg-[#FAF8F5] border-b border-zinc-100 cursor-pointer">
-        
+      <Link href={`/product/${product.handle}`} className="block relative aspect-square overflow-hidden bg-[#FAF8F5] border-b border-zinc-100 cursor-pointer">
+
         {/* Front Image */}
         <img
           src={imageFront}
@@ -71,7 +91,7 @@ export default function ProductCard({ product }) {
         {/* Floating Quick Shop CTA */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-4">
           <span className="text-[10px] uppercase tracking-widest text-gold font-sans font-bold border border-gold/40 px-3 py-1 rounded bg-white shadow-sm">
-            Discover Scent
+            View Details
           </span>
         </div>
       </Link>
@@ -79,14 +99,14 @@ export default function ProductCard({ product }) {
       {/* Details Section */}
       <div className="p-4 flex-1 flex flex-col justify-between">
         <div>
-          
-          {/* Inspired By tag */}
+
+          {/* Vendor / inspired-by tag */}
           <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 italic">
-            Inspired by {product.inspired_by || 'Original'}
+            {product.vendor ? `By ${product.vendor}` : `Inspired by ${product.inspired_by || 'Original'}`}
           </p>
 
           {/* Title */}
-          <Link href={`/product/${product.id}`} className="cursor-pointer">
+          <Link href={`/product/${product.handle}`} className="cursor-pointer">
             <h3 className="font-serif font-bold text-base text-[#1C1917] group-hover:text-gold transition-colors duration-300 mb-1">
               {product.name}
             </h3>
@@ -110,9 +130,16 @@ export default function ProductCard({ product }) {
 
           {/* Tags */}
           <div className="flex flex-wrap gap-1.5 mb-4">
-            <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
-              {product.gender}
-            </span>
+            {product.productType && (
+              <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
+                {product.productType}
+              </span>
+            )}
+            {!product.productType && (
+              <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
+                {product.gender}
+              </span>
+            )}
             <span className="px-2 py-0.5 bg-[#FAF8F5] border border-zinc-200 text-zinc-600 text-[9px] uppercase tracking-wider rounded">
               {product.longevity}
             </span>
@@ -125,9 +152,16 @@ export default function ProductCard({ product }) {
 
         {/* Price & Add to Cart Action */}
         <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-          <span className="font-sans font-bold text-base text-gold">
-            ₹{product.price.toLocaleString()}
-          </span>
+          <div className="flex flex-col">
+            <span className="font-sans font-bold text-base text-gold">
+              ₹{product.price.toLocaleString()}
+            </span>
+            {hasSale && (
+              <span className="text-[10px] text-zinc-400 line-through font-sans">
+                ₹{product.compareAtPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
           <button
             onClick={() => addToCart(product, 1)}
             className="flex items-center space-x-1 px-3 py-1.5 bg-gold hover:bg-gold-dark text-black rounded text-xs font-sans font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer shadow hover:shadow-gold/10"
