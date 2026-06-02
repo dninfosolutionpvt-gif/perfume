@@ -55,7 +55,8 @@ export default function AdminDashboard() {
   const [shopifyConfig, setShopifyConfig] = useState({ connected: false, storeDomain: '', storefrontAccessToken: '' });
   const [storeDomainInput, setStoreDomainInput] = useState('');
   const [storefrontTokenInput, setStorefrontTokenInput] = useState('');
-  const [adminTokenInput, setAdminTokenInput] = useState('');
+  const [clientIdInput, setClientIdInput] = useState('');
+  const [clientSecretInput, setClientSecretInput] = useState('');
   const [shopifyLoading, setShopifyLoading] = useState(false);
   const [shopifySuccess, setShopifySuccess] = useState('');
   const [shopifyError, setShopifyError] = useState('');
@@ -161,6 +162,28 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated]);
 
+  // Shopify OAuth callback parser
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isAuthenticated) {
+      const params = new URLSearchParams(window.location.search);
+      const connected = params.get('shopify_connected');
+      const error = params.get('shopify_error');
+      
+      if (connected === 'true') {
+        showToast('🎉 Shopify store connected and synced successfully!', 'success');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setActiveTab('shopify-connect');
+        checkShopifyConfig().then(() => fetchData());
+      }
+      
+      if (error) {
+        showToast(`❌ Connection failed: ${decodeURIComponent(error)}`, 'error');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setActiveTab('shopify-connect');
+      }
+    }
+  }, [isAuthenticated]);
+
   // Shopify Order Polling Loop
   useEffect(() => {
     if (!isAuthenticated || !shopifyConfig.connected) return;
@@ -174,7 +197,6 @@ export default function AdminDashboard() {
             const latestOrder = latestOrders[0];
             const exists = orders.some(o => String(o.id) === String(latestOrder.id));
             if (!exists) {
-              // Trigger notification alert sound
               try {
                 const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav');
                 audio.volume = 0.2;
@@ -214,42 +236,44 @@ export default function AdminDashboard() {
     showToast('Logged out of session');
   };
 
-  // Shopify credentials saving
+  // Shopify credentials saving (initiates OAuth)
   const handleSaveShopify = async (e) => {
     e.preventDefault();
     setShopifyLoading(true);
     setShopifySuccess('');
     setShopifyError('');
 
-    if (!storeDomainInput || !storefrontTokenInput || !adminTokenInput) {
-      setShopifyError('Please fill in all Shopify integration fields.');
+    if (!storeDomainInput || !storefrontTokenInput || !clientIdInput || !clientSecretInput) {
+      setShopifyError('Please fill in all Shopify connection fields.');
       setShopifyLoading(false);
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/shopify/config`, {
+      const frontendUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      const res = await fetch(`${API_BASE_URL}/api/shopify/authorize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           storeDomain: storeDomainInput,
           storefrontAccessToken: storefrontTokenInput,
-          adminAccessToken: adminTokenInput
+          clientId: clientIdInput,
+          clientSecret: clientSecretInput,
+          frontendUrl
         })
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
-        setShopifySuccess(`Connected successfully to Shopify shop: ${data.shopName || storeDomainInput}!`);
-        showToast('Shopify credentials verified and saved.');
-        await checkShopifyConfig();
-        await fetchData();
+      if (res.ok && data.authorizeUrl) {
+        showToast('Redirecting to Shopify to authorize credentials...');
+        // Redirect to Shopify OAuth flow
+        window.location.href = data.authorizeUrl;
       } else {
-        setShopifyError(data.error || 'Failed to authenticate connection.');
+        setShopifyError(data.error || 'Failed to initiate Shopify connection.');
+        setShopifyLoading(false);
       }
     } catch (err) {
       setShopifyError('Network error connecting to backend API.');
-    } finally {
       setShopifyLoading(false);
     }
   };
@@ -262,7 +286,8 @@ export default function AdminDashboard() {
       if (res.ok) {
         setStoreDomainInput('');
         setStorefrontTokenInput('');
-        setAdminTokenInput('');
+        setClientIdInput('');
+        setClientSecretInput('');
         setShopifyConfig({ connected: false });
         showToast('Shopify store disconnected.');
         await fetchData();
@@ -473,14 +498,13 @@ export default function AdminDashboard() {
       });
       
       if (res.ok) {
-        // Trigger notification sound
         try {
           const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2019/2019-84.wav');
           audio.volume = 0.25;
           audio.play();
         } catch (_) {}
         
-        showToast(`🎯 simulated checkout completed by ${name} from ${city} (Total: ₹${totalAmount.toLocaleString()})!`, 'success');
+        showToast(`🎯 Simulated checkout completed by ${name} from ${city} (Total: ₹${totalAmount.toLocaleString()})!`, 'success');
         fetchData();
       }
     } catch (err) {
@@ -513,7 +537,7 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md bg-stone-900 border border-stone-800 rounded-2xl shadow-2xl p-8 relative z-10 text-center"
+          className="w-full max-w-md bg-stone-900 border border-stone-880 rounded-2xl shadow-2xl p-8 relative z-10 text-center"
         >
           <div className="mb-8">
             <span className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Orova Paris</span>
@@ -527,7 +551,7 @@ export default function AdminDashboard() {
 
           <form onSubmit={handleLoginSubmit} className="space-y-6">
             {loginError && (
-              <p className="p-3 bg-red-950/40 border border-red-900/60 text-red-400 rounded text-xs font-semibold text-left flex items-center">
+              <p className="p-3 bg-red-955/40 border border-red-900/60 text-red-400 rounded text-xs font-semibold text-left flex items-center">
                 <ShieldAlert className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span>{loginError}</span>
               </p>
@@ -822,7 +846,7 @@ export default function AdminDashboard() {
                     {[45, 60, 52, 78, 65, 95, 84, 110, 125, 115, 140, 155].map((val, idx) => (
                       <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
                         <div className="w-full relative">
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-stone-950 text-white text-[9px] px-1.5 py-0.5 rounded border border-stone-800 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-stone-950 text-white text-[9px] px-1.5 py-0.5 rounded border border-stone-805 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 font-mono">
                             ₹{(val * 249).toLocaleString()}
                           </div>
                           <div 
@@ -861,10 +885,10 @@ export default function AdminDashboard() {
                             <p className="font-bold text-amber-550 font-mono">₹{order.total_amount.toLocaleString()}</p>
                             <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider ${
                               order.status === 'Delivered' 
-                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-900' 
+                                ? 'bg-emerald-955/60 text-emerald-400 border border-emerald-900' 
                                 : order.status === 'Shipped' 
-                                ? 'bg-blue-950/60 text-blue-400 border border-blue-900' 
-                                : 'bg-amber-950/60 text-amber-400 border border-amber-900'
+                                ? 'bg-blue-955/60 text-blue-400 border border-blue-900' 
+                                : 'bg-amber-955/60 text-amber-400 border border-amber-900'
                             }`}>
                               {order.status}
                             </span>
@@ -976,14 +1000,14 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                               <p className="font-bold text-white text-sm">{product.name}</p>
-                              <p className="text-[10px] text-stone-500 italic">Inspired by: {product.inspired_by || 'Original'}</p>
+                              <p className="text-[10px] text-stone-550 italic">Inspired by: {product.inspired_by || 'Original'}</p>
                             </div>
                           </td>
 
                           {/* Category Tags */}
                           <td className="p-4">
                             <div className="space-y-1">
-                              <span className="px-2 py-0.5 bg-stone-950 border border-stone-800 text-amber-500 text-[9px] uppercase tracking-wider rounded font-semibold font-mono">
+                              <span className="px-2 py-0.5 bg-stone-950 border border-stone-805 text-amber-500 text-[9px] uppercase tracking-wider rounded font-semibold font-mono">
                                 {product.gender}
                               </span>
                               <p className="text-[10px] text-stone-500 mt-1 font-sans">{product.fragrance_type} ({product.mood})</p>
@@ -1026,7 +1050,7 @@ export default function AdminDashboard() {
                             </button>
                             <button
                               onClick={() => handleDeleteProduct(product.id)}
-                              className="p-2 text-stone-500 hover:text-red-500 transition-colors border border-transparent hover:border-red-900/20 hover:bg-red-950/20 rounded-lg cursor-pointer"
+                              className="p-2 text-stone-500 hover:text-red-500 transition-colors border border-transparent hover:border-red-900/20 hover:bg-red-955/20 rounded-lg cursor-pointer"
                               title="Delete Perfume"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1065,10 +1089,10 @@ export default function AdminDashboard() {
                             <span className="font-bold text-sm text-white">ID: {order.shopify_order_number || `#${order.id}`}</span>
                             <span className={`px-2 py-0.5 rounded-full text-[9px] uppercase font-bold tracking-wider ${
                               order.status === 'Delivered' 
-                                ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-900' 
+                                ? 'bg-emerald-955/60 text-emerald-400 border border-emerald-900' 
                                 : order.status === 'Shipped' 
-                                ? 'bg-blue-950/60 text-blue-400 border border-blue-900' 
-                                : 'bg-amber-950/60 text-amber-400 border border-amber-900'
+                                ? 'bg-blue-955/60 text-blue-400 border border-blue-900' 
+                                : 'bg-amber-955/60 text-amber-400 border border-amber-900'
                             }`}>
                               {order.status}
                             </span>
@@ -1154,7 +1178,7 @@ export default function AdminDashboard() {
                                 <button
                                   onClick={() => handleUpdateOrder(order.id, { status: 'Shipped' })}
                                   disabled={order.status === 'Shipped'}
-                                  className="flex-1 py-1.5 border border-blue-500/20 hover:border-blue-500 text-blue-400 bg-blue-950/20 hover:bg-blue-900/10 rounded-lg font-bold uppercase tracking-wider text-[9px] transition-colors disabled:opacity-40 flex items-center justify-center gap-1 cursor-pointer"
+                                  className="flex-1 py-1.5 border border-blue-500/20 hover:border-blue-500 text-blue-400 bg-blue-955/20 hover:bg-blue-900/10 rounded-lg font-bold uppercase tracking-wider text-[9px] transition-colors disabled:opacity-40 flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                   <Truck className="w-3.5 h-3.5" />
                                   <span>Ship</span>
@@ -1162,7 +1186,7 @@ export default function AdminDashboard() {
                                 <button
                                   onClick={() => handleUpdateOrder(order.id, { status: 'Delivered' })}
                                   disabled={order.status === 'Delivered'}
-                                  className="flex-1 py-1.5 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 bg-emerald-950/20 hover:bg-emerald-900/10 rounded-lg font-bold uppercase tracking-wider text-[9px] transition-colors disabled:opacity-40 flex items-center justify-center gap-1 cursor-pointer"
+                                  className="flex-1 py-1.5 border border-emerald-500/20 hover:border-emerald-500 text-emerald-400 bg-emerald-955/20 hover:bg-emerald-900/10 rounded-lg font-bold uppercase tracking-wider text-[9px] transition-colors disabled:opacity-40 flex items-center justify-center gap-1 cursor-pointer"
                                 >
                                   <CheckCircle className="w-3.5 h-3.5" />
                                   <span>Deliver</span>
@@ -1204,7 +1228,7 @@ export default function AdminDashboard() {
               <div className="space-y-8 max-w-2xl">
                 <div>
                   <h3 className="font-serif text-xl font-bold text-white">Shopify Connection Hub</h3>
-                  <p className="text-stone-500 text-xs">Configure access credentials to dynamically sync products, orders, and stats.</p>
+                  <p className="text-stone-500 text-xs">Configure developer access credentials to dynamically sync products, orders, and stats (OAuth 2.0 Compliance).</p>
                 </div>
 
                 {/* Shopify Connection Card Details */}
@@ -1226,19 +1250,19 @@ export default function AdminDashboard() {
                       <p className="text-[11px] text-stone-400 leading-relaxed font-sans">
                         {shopifyConfig.connected 
                           ? `This storefront is actively linked with Shopify store domain: ${shopifyConfig.storeDomain}. Products and orders are automatically synced in real time.`
-                          : 'Connect a Shopify custom app to synchronize inventory, process orders, and calculate stats directly from your Shopify admin dashboard.'
+                          : 'Connect a Shopify app using Client ID and Secret to synchronize inventory, process orders, and calculate stats directly from your Shopify admin dashboard.'
                         }
                       </p>
                     </div>
                   </div>
 
                   {shopifySuccess && (
-                    <p className="p-3 bg-emerald-950/40 border border-emerald-900 text-emerald-400 rounded-lg text-xs font-semibold flex items-center">
+                    <p className="p-3 bg-emerald-955/40 border border-emerald-900 text-emerald-400 rounded-lg text-xs font-semibold flex items-center">
                       <CheckCircle className="w-4 h-4 mr-2" /> {shopifySuccess}
                     </p>
                   )}
                   {shopifyError && (
-                    <p className="p-3 bg-red-950/40 border border-red-900 text-red-400 rounded-lg text-xs font-semibold flex items-center">
+                    <p className="p-3 bg-red-955/40 border border-red-900 text-red-405 rounded-lg text-xs font-semibold flex items-center">
                       <ShieldAlert className="w-4 h-4 mr-2" /> {shopifyError}
                     </p>
                   )}
@@ -1269,20 +1293,32 @@ export default function AdminDashboard() {
                         onChange={(e) => setStorefrontTokenInput(e.target.value)}
                         className="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 p-2.5 rounded-lg text-white focus:outline-none font-mono"
                       />
-                      <span className="text-[10px] text-stone-500">Obtained from Shopify Settings &gt; Apps and sales channels &gt; Develop Apps &gt; Storefront API Access Token</span>
+                      <span className="text-[10px] text-stone-500">Obtained from Headless Sales Channel or App Settings</span>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="font-bold text-stone-300 block">Shopify Admin API Access Token *</label>
-                      <input
-                        required
-                        type="password"
-                        placeholder="shpat_..."
-                        value={adminTokenInput}
-                        onChange={(e) => setAdminTokenInput(e.target.value)}
-                        className="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 p-2.5 rounded-lg text-white focus:outline-none font-mono"
-                      />
-                      <span className="text-[10px] text-stone-500">Admin API Token (starts with shpat_) required to fetch orders and manage product specs</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="font-bold text-stone-300 block">Client ID (API Key) *</label>
+                        <input
+                          required
+                          type="text"
+                          placeholder="Enter Client ID..."
+                          value={clientIdInput}
+                          onChange={(e) => setClientIdInput(e.target.value)}
+                          className="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 p-2.5 rounded-lg text-white focus:outline-none font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-bold text-stone-300 block">Client Secret (API Secret Key) *</label>
+                        <input
+                          required
+                          type="password"
+                          placeholder="Enter Client Secret..."
+                          value={clientSecretInput}
+                          onChange={(e) => setClientSecretInput(e.target.value)}
+                          className="w-full bg-stone-900 border border-stone-800 focus:border-amber-500 p-2.5 rounded-lg text-white focus:outline-none font-mono"
+                        />
+                      </div>
                     </div>
 
                     <div className="pt-3 border-t border-stone-900 flex gap-3.5 justify-end">
@@ -1300,7 +1336,7 @@ export default function AdminDashboard() {
                         disabled={shopifyLoading}
                         className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-black font-bold uppercase tracking-wider rounded-lg transition-all disabled:opacity-50 cursor-pointer"
                       >
-                        {shopifyLoading ? 'Connecting...' : 'Verify & Connect Store'}
+                        {shopifyLoading ? 'Initiating OAuth...' : 'Connect & Authorize Store'}
                       </button>
                     </div>
 
@@ -1310,14 +1346,17 @@ export default function AdminDashboard() {
 
                 {/* API Setup Help instructions */}
                 <div className="bg-[#121214] border border-stone-900 p-5 rounded-xl text-xs text-stone-400 space-y-3">
-                  <h4 className="font-serif font-bold text-white flex items-center gap-1.5"><Info className="w-4 h-4 text-amber-500" /> Shopify Custom App Setup Instructions</h4>
+                  <h4 className="font-serif font-bold text-white flex items-center gap-1.5"><Info className="w-4 h-4 text-amber-500" /> Shopify Custom App Setup Instructions (2026 Update)</h4>
                   <ol className="list-decimal pl-5 space-y-1.5 text-stone-500 leading-relaxed font-sans">
-                    <li>Log into your Shopify Admin panel.</li>
-                    <li>Navigate to <span className="text-stone-400">Settings</span> &gt; <span className="text-stone-400">Apps and sales channels</span> &gt; <span className="text-stone-400">Develop apps</span>.</li>
-                    <li>Click <span className="text-stone-400">Create an app</span> and name it <span className="text-stone-450 font-semibold">Orova Sync Client</span>.</li>
-                    <li>In Admin API configurations, check scopes: <span className="text-stone-400">write_products, read_products, write_orders, read_orders</span>. Save.</li>
-                    <li>In Storefront API configurations, check scope: <span className="text-stone-400">unauthenticated_read_product_listings</span>. Save.</li>
-                    <li>Install App and copy generated access keys here to establish sync.</li>
+                    <li>Log into your Shopify Partner Dashboard or Store Admin.</li>
+                    <li>Go to App settings and create a custom app. Copy the <span className="text-stone-300">Client ID</span> and <span className="text-stone-300">Client Secret</span>.</li>
+                    <li>In the App Setup config, make sure to add this URL to the **Allowed redirection URIs** whitelist:
+                      <p className="mt-1 font-mono text-[10px] text-amber-500 bg-stone-900/80 p-2 rounded border border-stone-800 break-all select-all">
+                        {typeof window !== 'undefined' ? `${API_BASE_URL}/api/shopify/callback` : 'http://localhost:5000/api/shopify/callback'}
+                      </p>
+                    </li>
+                    <li>In Admin API configurations, check scopes: <span className="text-stone-300">write_products, read_products, write_orders, read_orders</span>.</li>
+                    <li>Save, and click **Connect & Authorize Store** to perform the automated OAuth exchange.</li>
                   </ol>
                 </div>
 
@@ -1361,12 +1400,12 @@ export default function AdminDashboard() {
               <form onSubmit={handleProductFormSubmit} className="p-6 overflow-y-auto space-y-5 text-xs text-stone-400 max-h-[70vh] scrollbar-thin">
                 
                 {formError && (
-                  <p className="p-3 bg-red-950/40 border border-red-900 text-red-400 rounded-lg flex items-center font-semibold">
+                  <p className="p-3 bg-red-955/40 border border-red-900 text-red-405 rounded-lg flex items-center font-semibold">
                     <ShieldAlert className="w-4 h-4 mr-2" /> {formError}
                   </p>
                 )}
                 {formSuccess && (
-                  <p className="p-3 bg-emerald-950/40 border border-emerald-900 text-emerald-450 rounded-lg flex items-center font-semibold">
+                  <p className="p-3 bg-emerald-955/40 border border-emerald-900 text-emerald-450 rounded-lg flex items-center font-semibold">
                     <CheckCircle className="w-4 h-4 mr-2 animate-bounce" /> {formSuccess}
                   </p>
                 )}

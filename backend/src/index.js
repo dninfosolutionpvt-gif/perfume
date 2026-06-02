@@ -545,7 +545,7 @@ const mockOrders = [
 // Get shopify credentials config status
 app.get('/api/shopify/config', (req, res) => {
   const config = getShopifyConfig();
-  if (config) {
+  if (config && config.connected) {
     return res.json({
       connected: true,
       storeDomain: config.storeDomain,
@@ -555,31 +555,110 @@ app.get('/api/shopify/config', (req, res) => {
   return res.json({ connected: false });
 });
 
-// Save and verify shopify credentials
-app.post('/api/shopify/config', async (req, res) => {
-  const { storeDomain, storefrontAccessToken, adminAccessToken } = req.body;
-  if (!storeDomain || !storefrontAccessToken || !adminAccessToken) {
+// OAuth Step 1: Initiate Shopify Authorization Redirect
+app.post('/api/shopify/authorize', async (req, res) => {
+  const { storeDomain, storefrontAccessToken, clientId, clientSecret, frontendUrl } = req.body;
+  if (!storeDomain || !storefrontAccessToken || !clientId || !clientSecret || !frontendUrl) {
     return res.status(400).json({ error: 'Missing Shopify configuration details' });
   }
 
-  const testConfig = { storeDomain, storefrontAccessToken, adminAccessToken };
+  const cleanDomain = storeDomain.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
+  // Store credentials temporarily (needed during callback token exchange)
+  const tempConfig = {
+    storeDomain: cleanDomain,
+    storefrontAccessToken,
+    clientId,
+    clientSecret,
+    connected: false,
+    frontendUrl
+  };
+  saveShopifyConfig(tempConfig);
+
+  const scopes = 'read_products,write_products,read_orders,write_orders';
+  const redirectUri = `${req.protocol}://${req.get('host')}/api/shopify/callback`;
+  const state = encodeURIComponent(frontendUrl);
   
+  const authorizeUrl = `https://${cleanDomain}/admin/oauth/authorize?client_id=${clientId}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${state}`;
+  
+  return res.json({ authorizeUrl });
+});
+
+// OAuth Step 2: Shopify Redirect Callback & Token Exchange
+app.get('/api/shopify/callback', async (req, res) => {
+  const { code, shop, state } = req.query;
+  const frontendUrl = decodeURIComponent(state || '');
+
+  if (!code || !shop) {
+    return res.redirect(`${frontendUrl || 'http://localhost:3000'}/admin?shopify_error=Missing_callback_params`);
+  }
+
+  const config = getShopifyConfig();
+  if (!config) {
+    return res.redirect(`${frontendUrl || 'http://localhost:3000'}/admin?shopify_error=No_temporary_config_found`);
+  }
+
+  const cleanShop = shop.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
   try {
-    // Verify connection by fetching shop details from Admin API
-    const response = await shopifyAdminRequest(testConfig, 'shop.json');
-    if (response && response.shop) {
-      saveShopifyConfig(testConfig);
-      return res.json({
-        success: true,
-        message: 'Successfully connected to Shopify store!',
-        shopName: response.shop.name,
-        currency: response.shop.currency
+    const tokenUrl = `https://${cleanShop}/admin/oauth/access_token`;
+    const body = {
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      code
+    };
+
+    let responseData;
+    if (typeof fetch !== 'undefined') {
+      const response = await fetch(tokenUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Token exchange failed (${response.status}): ${errText}`);
+      }
+      responseData = await response.json();
+    } else {
+      responseData = await new Promise((resolve, reject) => {
+        const options = {
+          hostname: cleanShop,
+          path: '/admin/oauth/access_token',
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        };
+        const reqPost = https.request(options, (resPost) => {
+          let data = '';
+          resPost.on('data', chunk => { data += chunk; });
+          resPost.on('end', () => {
+            if (resPost.statusCode >= 200 && resPost.statusCode < 300) {
+              resolve(JSON.parse(data));
+            } else {
+              reject(new Error(`Token exchange failed (${resPost.statusCode}): ${data}`));
+            }
+          });
+        });
+        reqPost.on('error', reject);
+        reqPost.write(JSON.stringify(body));
+        reqPost.end();
       });
     }
-    return res.status(400).json({ error: 'Failed to verify Shopify connection: Invalid response' });
-  } catch (error) {
-    console.error('Shopify verification failed:', error.message);
-    return res.status(400).json({ error: `Connection failed: ${error.message}` });
+
+    const { access_token } = responseData;
+    if (!access_token) {
+      throw new Error('No access_token returned in Shopify response');
+    }
+
+    // Save final config with access token
+    config.adminAccessToken = access_token;
+    config.connected = true;
+    saveShopifyConfig(config);
+
+    return res.redirect(`${frontendUrl || 'http://localhost:3000'}/admin?shopify_connected=true`);
+  } catch (err) {
+    console.error('Shopify OAuth Callback Error:', err.message);
+    return res.redirect(`${frontendUrl || 'http://localhost:3000'}/admin?shopify_error=${encodeURIComponent(err.message)}`);
   }
 });
 
